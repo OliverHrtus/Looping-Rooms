@@ -1,11 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Looping Rooms - Main Menu</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Georgia', serif;
+      overflow: hidden;
+      background: linear-gradient(135deg, #000000 0%, #1a1a1a 25%, #0d0d0d 50%, #1a1a1a 75%, #000000 100%);
+      position: relative;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 50%, rgba(200, 200, 200, 0.08) 0%, transparent 50%);
+      animation: glow 8s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes glow {
+
+      0%,
+      100% {
+        opacity: 0.5;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    .container {
+      text-align: center;
+      z-index: 1;
+      position: relative;
+    }
+
+    .title-wrapper {
+      margin-bottom: 60px;
+      position: relative;
+    }
+
+    .decorative-top {
+      font-size: 48px;
+      color: #ffffff;
+      margin-bottom: 10px;
+      letter-spacing: 8px;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+    }
+
+    h1 {
+      font-size: 72px;
+      color: #ffffff;
+      margin: 20px 0;
+      letter-spacing: 6px;
+      text-shadow:
+        0 0 20px rgba(255, 255, 255, 0.6),
+        0 0 40px rgba(200, 200, 200, 0.4),
+        2px 2px 4px rgba(0, 0, 0, 0.8);
+      font-weight: bold;
+    }
+
+    .decorative-bottom {
+      font-size: 48px;
+      color: #ffffff;
+      margin-top: 10px;
+      letter-spacing: 8px;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+    }
+
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      align-items: center;
+    }
+
+    .menu-button {
+      padding: 15px 50px;
+      font-size: 16px;
+      font-family: 'Georgia', serif;
+      color: #ffffff;
+      border: 2px solid #ffffff;
+      background: rgba(50, 50, 50, 0.7);
+      cursor: pointer;
+      letter-spacing: 2px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: visible;
+      text-transform: uppercase;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .menu-button::before {
+      content: '✦';
+      position: absolute;
+      left: 15px;
+      opacity: 0;
+      transform: translateX(-15px);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    .menu-button::after {
+      content: '✦';
+      position: absolute;
+      right: 15px;
+      opacity: 0;
+      transform: translateX(15px);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    .menu-button:hover::before {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .menu-button:hover::after {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .menu-button-shine {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .menu-button-shine::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent);
+      transition: left 0.5s ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .menu-button-shine:hover::before {
+      left: 100%;
+    }
+
+    .menu-button:hover {
+      background: linear-gradient(135deg,
+          rgba(200, 200, 200, 0.4) 0%,
+          rgba(150, 150, 150, 0.4) 50%,
+          rgba(200, 200, 200, 0.2) 100%);
+      color: #000000;
+      border-color: #ffffff;
+      box-shadow:
+        0 0 15px rgba(255, 255, 255, 0.6),
+        0 0 30px rgba(200, 200, 200, 0.3),
+        inset 0 0 15px rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    .menu-button:active {
+      transform: scale(0.98);
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 20px;
+      right: 30px;
+      color: #cccccc;
+      font-size: 14px;
+      z-index: 1;
+    }
+
+    .version {
+      position: fixed;
+      bottom: 20px;
+      left: 30px;
+      color: #cccccc;
+      font-size: 14px;
+      z-index: 1;
+    }
+  </style>
 </head>
+
 <body>
-    
+  <div class="container">
+    <div class="title-wrapper">
+      <div class="decorative-top">✦ ✧ ◆ ✧ ✦</div>
+      <h1>LOOPING ROOMS</h1>
+      <div class="decorative-bottom">✦ ◆ ✧ ◆ ✦</div>
+    </div>
+
+    <div class="menu">
+      <button class="menu-button">Start Game</button>
+      <button class="menu-button">Options</button>
+      <button class="menu-button">Achievements</button>
+      <button class="menu-button">Extras</button>
+      <button class="menu-button">Quit Game</button>
+    </div>
+  </div>
+
+  <div class="version">v.Alpha</div>
+  <div class="footer">Created by OliFil Studio</div>
+
+  <script>
+
+  </script>
 </body>
+
 </html>
