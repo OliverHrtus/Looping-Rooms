@@ -221,7 +221,7 @@
     </div>
 
     <div class="menu">
-      <button class="menu-button">Start Game</button>
+      <button class="menu-button" onclick="window.location.href='level_one.html'">Start Game</button>
       <button class="menu-button">Options</button>
       <button class="menu-button">Achievements</button>
       <button class="menu-button">Extras</button>
@@ -232,8 +232,19 @@
   <div class="version">v.Alpha</div>
   <div class="footer">Created by OliFil Studio</div>
 
-  <script>
+  <audio id="bgMusic" loop>
+    <source src="Music/Hollow Knight OST - Title Theme.mp3" type="audio/mpeg">
+  </audio>
 
+  <script>
+    let musicStarted = false;
+    document.addEventListener('click', () => {
+      if (!musicStarted) {
+        const bgMusic = document.getElementById('bgMusic');
+        bgMusic.play().catch(e => console.log('Audio play failed:', e));
+        musicStarted = true;
+      }
+    });
   </script>
 </body>
 
