@@ -32,15 +32,6 @@
 </head>
 
 <body>
-
-    <div id="instructions">
-        <strong>Controls:</strong><br>
-        Move: A/D or Left/Right Arrow<br>
-        Jump: Space, W, or Up Arrow<br>
-        Crouch: S or Down Arrow<br>
-        Zoom: Mouse Wheel
-    </div>
-
     <canvas id="gameCanvas"></canvas>
 
     <script>
@@ -61,9 +52,9 @@
             velocityY: 0,
             isJumping: false,
             isCrouching: false,
-            speed: 3,
-            jumpPower: -12,
-            gravity: 0.4,
+            speed: 2.5,
+            jumpPower: -8,
+            gravity: 0.2,
             groundY: canvas.height - 150
         };
 
@@ -79,7 +70,18 @@
             { x: 300, y: canvas.height - 300, width: 200, height: 20 },
             { x: 600, y: canvas.height - 400, width: 150, height: 20 },
             { x: 900, y: canvas.height - 250, width: 180, height: 20 },
-            { x: 1200, y: canvas.height - 350, width: 120, height: 20 }
+            { x: 1200, y: canvas.height - 350, width: 120, height: 20 },
+            { x: 1500, y: canvas.height - 400, width: 150, height: 251 }
+        ];
+
+        const walls = [
+            { x: 0, y: 0, width: 3000, height: 20 },
+            { x: 0, y: 0, width: 20, height: canvas.height },
+            { x: 2980, y: 0, width: 20, height: canvas.height }
+        ];
+
+        const door = [
+            { x: 2800, y: canvas.height - 200, width: 50, height: 50 }
         ];
 
         // RESIZE
@@ -139,6 +141,33 @@
             }
             return false;
         }
+        function checkWallCollision() {
+            for (let w of walls) {
+                if (player.x < w.x + w.width &&
+                    player.x + player.width > w.x &&
+                    player.y < w.y + w.height &&
+                    player.y + player.height > w.y) {
+
+                    if (player.prevY + player.height <= w.y) {
+                        player.y = w.y - player.height;
+                        player.velocityY = 0;
+                        player.isJumping = false;
+                        return true;
+                    } else if (player.prevY >= w.y + w.height) {
+                        player.y = w.y + w.height;
+                        player.velocityY = 0;
+                        return true;
+                    } else {
+                        if (player.velocityX > 0 && player.x < w.x) {
+                            player.x = w.x - player.width;
+                        } else if (player.velocityX < 0 && player.x > w.x) {
+                            player.x = w.x + w.width;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
 
         // PLAYER UPDATE
         function updatePlayer() {
@@ -166,6 +195,7 @@
             player.x += player.velocityX;
             player.y += player.velocityY;
 
+            checkWallCollision();
             if (!checkPlatformCollision()) {
                 if (player.y >= player.groundY - player.height) {
                     player.y = player.groundY - player.height;
@@ -173,6 +203,7 @@
                     player.isJumping = false;
                 }
             }
+
         }
 
         // CAMERA UPDATE
@@ -190,13 +221,25 @@
         }
 
         function drawEnvironment() {
-            ctx.fillStyle = '#8B4513';
+            ctx.fillStyle = '#818589';
             ctx.fillRect(0, player.groundY, 3000, canvas.height);
 
             ctx.fillStyle = '#654321';
             platforms.forEach(p => {
                 ctx.fillRect(p.x, p.y, p.width, p.height);
             });
+            
+            ctx.fillStyle = '#36454F';
+            walls.forEach(w => {
+                ctx.fillRect(w.x, w.y, w.width, w.height);
+            });
+
+            ctx.fillStyle = '#FFD700';
+            door.forEach(d => {
+                ctx.fillRect(d.x, d.y, d.width, d.height);
+            });
+
+
         }
 
         // GAME LOOP
