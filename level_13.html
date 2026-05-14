@@ -32,18 +32,6 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // 🖼️ LOAD SPRITE
-        const playerSprite = new Image();
-        playerSprite.src = "Images/run.png";
-        let spriteLoaded = false;
-        playerSprite.onload = () => {
-            spriteLoaded = true;
-            gameLoop(); // Start game loop after sprite loads
-        };
-        playerSprite.onerror = () => {
-            console.error("Failed to load sprite: Images/run.png");
-        };
-
         // PLAYER
         const player = {
             x: 100,
@@ -58,15 +46,7 @@
             speed: 2.5,
             jumpPower: -8,
             gravity: 0.2,
-            groundY: canvas.height - 150,
-
-            // 🎞️ ANIMATION
-            frame: 0,
-            frameCount: 5,
-            frameWidth: 64,
-            frameHeight: 64,
-            frameTimer: 0,
-            frameDelay: 6
+            groundY: canvas.height - 150
         };
 
         // CAMERA
@@ -97,10 +77,17 @@
 
         // INPUT
         const keys = {};
-        document.addEventListener('keydown', e => keys[e.code] = true);
+        document.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (e.code === 'KeyE') {
+                checkDoorInteraction();
+            }
+        });
         document.addEventListener('keyup', e => keys[e.code] = false);
 
-        // COLLISION
+
+       
+       // COLLISION
         function checkPlatformCollision() {
             for (let p of platforms) {
                 if (player.x < p.x + p.width &&
@@ -113,10 +100,33 @@
                         player.velocityY = 0;
                         player.isJumping = false;
                         return true;
+                    } else if (player.prevY >= p.y + p.height) {
+                        player.y = p.y + p.height;
+                        player.velocityY = 0;
+                        return true;
+                    } else {
+                        if (player.velocityX > 0 && player.x < p.x) {
+                            player.x = p.x - player.width;
+                        } else if (player.velocityX < 0 && player.x > p.x) {
+                            player.x = p.x + p.width;
+                        }
                     }
                 }
             }
             return false;
+        }
+
+        // DOOR INTERACTION
+        function checkDoorInteraction() {
+            for (let d of door) {
+                if (player.x < d.x + d.width &&
+                    player.x + player.width > d.x &&
+                    player.y < d.y + d.height &&
+                    player.y + player.height > d.y) {
+                    window.location.href = 'level_14.html';
+                    return;
+                }
+            }
         }
 
         // PLAYER UPDATE
@@ -145,17 +155,6 @@
                     player.isJumping = false;
                 }
             }
-
-            // 🎞️ ANIMATION LOGIC
-            if (player.velocityX !== 0 && !player.isJumping) {
-                player.frameTimer++;
-                if (player.frameTimer >= player.frameDelay) {
-                    player.frame = (player.frame + 1) % player.frameCount;
-                    player.frameTimer = 0;
-                }
-            } else {
-                player.frame = 0;
-            }
         }
 
         // CAMERA
@@ -167,39 +166,8 @@
 
         // 🎨 DRAW PLAYER (SPRITE)
         function drawPlayer() {
-            if (spriteLoaded) {
-                const frameY = player.frame * player.frameHeight; // Changed to vertical frames
-
-                // Flip when going left
-                if (player.velocityX < 0) {
-                    ctx.save();
-                    ctx.scale(-1, 1);
-                    ctx.drawImage(
-                        playerSprite,
-                        0, frameY, // Changed to vertical
-                        player.frameWidth, player.frameHeight,
-                        -player.x - player.width,
-                        player.y,
-                        player.width,
-                        player.height
-                    );
-                    ctx.restore();
-                } else {
-                    ctx.drawImage(
-                        playerSprite,
-                        0, frameY, // Changed to vertical
-                        player.frameWidth, player.frameHeight,
-                        player.x,
-                        player.y,
-                        player.width,
-                        player.height
-                    );
-                }
-            } else {
-                // Fallback: draw red rectangle if sprite not loaded
                 ctx.fillStyle = 'red';
                 ctx.fillRect(player.x, player.y, player.width, player.height);
-            }
         }
 
         // ENVIRONMENT
@@ -240,7 +208,8 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Game loop will start after sprite loads
+        // Start the game loop
+        gameLoop();
     </script>
 </body>
 

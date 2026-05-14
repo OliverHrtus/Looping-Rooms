@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Looping Rooms</title>
+
     <style>
         body {
             margin: 0;
@@ -16,17 +17,7 @@
 
         canvas {
             display: block;
-            background-color: transparent;
-        }
-
-        #instructions {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 10;
+            background-color: #90EE90;
         }
     </style>
 </head>
@@ -81,29 +72,11 @@
         ];
 
         const door = [
-            { x: 2750, y: canvas.height - 305, width: 100, height: 150 }
+            { x: 2800, y: canvas.height - 200, width: 50, height: 50 }
         ];
-
-        // RESIZE
-        window.addEventListener('resize', () => {
-            const oldHeight = canvas.height;
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            const heightDiff = canvas.height - oldHeight;
-            player.groundY = canvas.height - 150;
-
-            platforms.forEach(p => p.y += heightDiff);
-
-            if (player.y > player.groundY - player.height) {
-                player.y = player.groundY - player.height;
-            }
-            player.prevY = player.y;
-        });
 
         // INPUT
         const keys = {};
-
         document.addEventListener('keydown', e => {
             keys[e.code] = true;
             if (e.code === 'KeyE') {
@@ -112,13 +85,9 @@
         });
         document.addEventListener('keyup', e => keys[e.code] = false);
 
-        // ZOOM
-        document.addEventListener("wheel", (e) => {
-            camera.zoom += e.deltaY * -0.001;
-            camera.zoom = Math.max(0.5, Math.min(3, camera.zoom));
-        });
 
-        // COLLISION
+       
+       // COLLISION
         function checkPlatformCollision() {
             for (let p of platforms) {
                 if (player.x < p.x + p.width &&
@@ -146,33 +115,6 @@
             }
             return false;
         }
-        function checkWallCollision() {
-            for (let w of walls) {
-                if (player.x < w.x + w.width &&
-                    player.x + player.width > w.x &&
-                    player.y < w.y + w.height &&
-                    player.y + player.height > w.y) {
-
-                    if (player.prevY + player.height <= w.y) {
-                        player.y = w.y - player.height;
-                        player.velocityY = 0;
-                        player.isJumping = false;
-                        return true;
-                    } else if (player.prevY >= w.y + w.height) {
-                        player.y = w.y + w.height;
-                        player.velocityY = 0;
-                        return true;
-                    } else {
-                        if (player.velocityX > 0 && player.x < w.x) {
-                            player.x = w.x - player.width;
-                        } else if (player.velocityX < 0 && player.x > w.x) {
-                            player.x = w.x + w.width;
-                        }
-                    }
-                }
-            }
-            return false;
-        }
 
         // DOOR INTERACTION
         function checkDoorInteraction() {
@@ -181,7 +123,7 @@
                     player.x + player.width > d.x &&
                     player.y < d.y + d.height &&
                     player.y + player.height > d.y) {
-                    window.location.href = 'level_two.html';
+                    window.location.href = 'level_10.html';
                     return;
                 }
             }
@@ -189,20 +131,13 @@
 
         // PLAYER UPDATE
         function updatePlayer() {
+
+            // MOVEMENT
             if (keys['KeyA'] || keys['ArrowLeft']) player.velocityX = -player.speed;
             else if (keys['KeyD'] || keys['ArrowRight']) player.velocityX = player.speed;
             else player.velocityX = 0;
 
-            if (keys['KeyS'] || keys['ArrowDown']) {
-                player.isCrouching = true;
-                player.height = 25;
-                player.y = player.groundY - player.height;
-            } else {
-                player.isCrouching = false;
-                player.height = 50;
-            }
-
-            if ((keys['Space'] || keys['KeyW'] || keys['ArrowUp']) && !player.isJumping && !player.isCrouching) {
+            if ((keys['Space'] || keys['KeyW'] || keys['ArrowUp']) && !player.isJumping) {
                 player.velocityY = player.jumpPower;
                 player.isJumping = true;
             }
@@ -213,7 +148,6 @@
             player.x += player.velocityX;
             player.y += player.velocityY;
 
-            checkWallCollision();
             if (!checkPlatformCollision()) {
                 if (player.y >= player.groundY - player.height) {
                     player.y = player.groundY - player.height;
@@ -221,79 +155,44 @@
                     player.isJumping = false;
                 }
             }
-
         }
 
-        // CAMERA UPDATE
+        // CAMERA
         function updateCamera() {
             const lerp = 0.1;
-
-            camera.x += (player.x + player.width / 2 - camera.x) * lerp;
-            camera.y += (player.y + player.height / 2 - camera.y) * lerp;
+            camera.x += (player.x - camera.x) * lerp;
+            camera.y += (player.y - camera.y) * lerp;
         }
 
-        // DRAW
+        // 🎨 DRAW PLAYER (SPRITE)
         function drawPlayer() {
-            ctx.fillStyle = 'red';
-            ctx.fillRect(player.x, player.y, player.width, player.height);
+                ctx.fillStyle = 'red';
+                ctx.fillRect(player.x, player.y, player.width, player.height);
         }
 
+        // ENVIRONMENT
         function drawEnvironment() {
-            ctx.fillStyle = '#5a5a5a';
+            ctx.fillStyle = '#818589';
             ctx.fillRect(0, player.groundY, 3000, canvas.height);
-            
-            ctx.strokeStyle = '#454545';
-            ctx.lineWidth = 1;
-            for (let x = 0; x < 3000; x += 50) {
-                for (let y = player.groundY; y < canvas.height; y += 50) {
-                    ctx.strokeRect(x, y, 50, 50);
-                }
-            }
 
-            ctx.fillStyle = '#696969';
+            ctx.fillStyle = '#654321';
             platforms.forEach(p => {
                 ctx.fillRect(p.x, p.y, p.width, p.height);
-                ctx.strokeStyle = '#4a4a4a';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(p.x, p.y, p.width, p.height);
-            });
-            
-            ctx.fillStyle = '#2a2a2a';
-            walls.forEach(w => {
-                ctx.fillRect(w.x, w.y, w.width, w.height);
             });
 
+            ctx.fillStyle = '#FFD700';
             door.forEach(d => {
-                ctx.fillStyle = '#1a1a1a';
-                ctx.fillRect(d.x - 5, d.y - 5, d.width + 10, d.height + 10);
-                
-                ctx.fillStyle = '#c0c0c0';
                 ctx.fillRect(d.x, d.y, d.width, d.height);
-                
-                ctx.strokeStyle = '#888888';
-                ctx.lineWidth = 2;
-                ctx.moveTo(d.x + d.width / 2, d.y);
-                ctx.lineTo(d.x + d.width / 2, d.y + d.height);
-                ctx.stroke();
-                
-                ctx.fillStyle = '#ffd700';
-                ctx.fillRect(d.x + d.width - 15, d.y + d.height / 2 - 8, 10, 16);
-                
-                ctx.fillStyle = '#ffff00';
-                ctx.beginPath();
-                ctx.arc(d.x + 15, d.y + 15, 4, 0, Math.PI * 2);
-                ctx.fill();
             });
         }
 
-        // GAME LOOP
+        // LOOP
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             updatePlayer();
             updateCamera();
 
-            // APPLY CAMERA
             ctx.setTransform(
                 camera.zoom, 0,
                 0, camera.zoom,
@@ -304,12 +203,12 @@
             drawEnvironment();
             drawPlayer();
 
-            // RESET
             ctx.setTransform(1, 0, 0, 1, 0, 0);
 
             requestAnimationFrame(gameLoop);
         }
 
+        // Start the game loop
         gameLoop();
     </script>
 </body>
