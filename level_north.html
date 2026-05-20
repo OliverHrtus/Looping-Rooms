@@ -413,58 +413,179 @@
             }
         });
 
-        // ── INVENTORY ─────────────────────────────────────────────
+         // ── INVENTORY ─────────────────────────────────────────────
         const INVENTORY_SIZE = 5;
         const inventory = Array(INVENTORY_SIZE).fill(null);
         let activeSlot = 0;
 
+        // ── SAVE / LOAD INVENTORY ────────────────────────────────
+
+        function saveInventory() {
+            localStorage.setItem(
+                'looping_rooms_inventory',
+                JSON.stringify(inventory)
+            );
+        }
+
+        function loadInventory() {
+            const saved = localStorage.getItem('looping_rooms_inventory');
+
+            if (!saved) return;
+
+            const parsed = JSON.parse(saved);
+
+            for (let i = 0; i < INVENTORY_SIZE; i++) {
+                inventory[i] = parsed[i];
+            }
+
+            renderInventory();
+        }
+
+        // OPTIONAL: clear inventory completely
+        function clearInventory() {
+            localStorage.removeItem('looping_rooms_inventory');
+
+            for (let i = 0; i < INVENTORY_SIZE; i++) {
+                inventory[i] = null;
+            }
+
+            renderInventory();
+        }
+
+        // ── ADD ITEM ─────────────────────────────────────────────
+
         function addToInventory(item) {
+
+            // stack existing items
             for (let i = 0; i < INVENTORY_SIZE; i++) {
-                if (inventory[i] && inventory[i].id === item.id) { inventory[i].count++; renderInventory(); return true; }
+                if (inventory[i] && inventory[i].id === item.id) {
+                    inventory[i].count++;
+
+                    renderInventory();
+                    saveInventory();
+
+                    return true;
+                }
             }
+
+            // place in empty slot
             for (let i = 0; i < INVENTORY_SIZE; i++) {
-                if (!inventory[i]) { inventory[i] = { ...item, count: 1 }; renderInventory(); return true; }
+                if (!inventory[i]) {
+
+                    inventory[i] = {
+                        ...item,
+                        count: 1
+                    };
+
+                    renderInventory();
+                    saveInventory();
+
+                    return true;
+                }
             }
+
             return false;
         }
 
+        // ── RENDER INVENTORY ────────────────────────────────────
+
         function renderInventory() {
+
             for (let i = 0; i < INVENTORY_SIZE; i++) {
-                document.getElementById(`slot-${i}`).classList.toggle('active', i === activeSlot);
-                document.getElementById(`icon-${i}`).textContent = inventory[i] ? inventory[i].icon : '';
-                document.getElementById(`count-${i}`).textContent = inventory[i] && inventory[i].count > 1 ? inventory[i].count : '';
+
+                document
+                    .getElementById(`slot-${i}`)
+                    .classList.toggle('active', i === activeSlot);
+
+                document.getElementById(`icon-${i}`).textContent =
+                    inventory[i]
+                        ? inventory[i].icon
+                        : '';
+
+                document.getElementById(`count-${i}`).textContent =
+                    inventory[i] && inventory[i].count > 1
+                        ? inventory[i].count
+                        : '';
             }
         }
 
+
         // ── WORLD ITEMS ───────────────────────────────────────────
         const worldItems = [
-            { id: 'key', icon: '🗝️', label: 'Golden Key', x: 180, width: 28, height: 28, collected: false },
-            { id: 'potion', icon: '🧪', label: 'Potion', x: 420, width: 28, height: 28, collected: false },
-            { id: 'sword', icon: '⚔️', label: 'Sword', x: 700, width: 28, height: 28, collected: false },
             { id: 'note_1', icon: '📄', label: 'Note #1', x: 300, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #1', noteContent: '6' },
             { id: 'note_2', icon: '📄', label: 'Note #2', x: 900, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #2', noteContent: '6' },
             { id: 'note_3', icon: '📄', label: 'Note #3', x: 1500, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #3', noteContent: '5' },
             { id: 'note_4', icon: '📄', label: 'Note #4', x: 2100, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #4', noteContent: '8' },
             { id: 'lockbox', icon: '📦', label: 'Lock Box', x: 1200, width: 50, height: 50, collected: false, isLockbox: true, unlocked: false },
-            { id: 'key_north', icon: '🔑', label: 'North Key', x: 0, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'north' },
-            { id: 'key_south', icon: '🔑', label: 'South Key', x: 0, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'south' },
-            { id: 'key_west',  icon: '🔑', label: 'West Key',  x: 0, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'west'  },
-            { id: 'key_east',  icon: '🔑', label: 'East Key',  x: 0, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'east'  },
+            { id: 'key_east', icon: '🔑', label: 'East Key', x: 0, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'east' },
+            { id: 'key_main', icon: '🔑', label: 'Main Key', x: 0, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'north' },
+
         ];
         const itemPositions = {
-            key: [180, 500], potion: [420, 480], sword: [700, 520],
             note_1: [300, 460], note_2: [900, 500], note_3: [1500, 480], note_4: [2100, 500],
             lockbox: [1200, 490],
-            key_north: [400,  200], key_south: [2600, 600],
-            key_west:  [200,  600], key_east:  [2800, 200],
+            key_east: [200, 600],
+            key_main: [400, 200]
         };
         worldItems.forEach(item => { const p = itemPositions[item.id]; item.x = p[0]; item.y = p[1]; });
 
+        // ── DROPPED ITEMS (dynamic world items from drops) ────────
+        // These live alongside worldItems but are spawned at runtime.
+        const droppedItems = [];
+        let dropIdCounter = 0;
+
+        function dropActiveItem() {
+            if (noteOpen || lockboxOpen || isTransitioning) return;
+            const slot = inventory[activeSlot];
+            if (!slot) return;
+
+            // Notes stay as world items; dropping them re-places them — they're readable again.
+            // Build a dropped world item centered on the player.
+            const itemW = slot.isLockbox ? 50 : 28;
+            const itemH = slot.isLockbox ? 50 : 28;
+            const dropX = player.x + player.width / 2 - itemW / 2;
+            const dropY = player.y + player.height / 2 - itemH / 2;
+
+            const dropped = {
+                id: slot.id + '_drop_' + (dropIdCounter++),
+                baseId: slot.id,        // original id for re-pickup stacking
+                icon: slot.icon,
+                label: slot.label,
+                x: dropX,
+                y: dropY,
+                width: itemW,
+                height: itemH,
+                collected: false,
+                isDropped: true,
+                // carry over special flags
+                isNote: slot.isNote || false,
+                noteTitle: slot.noteTitle,
+                noteContent: slot.noteContent,
+                isLockbox: slot.isLockbox || false,
+                unlocked: slot.unlocked || false,
+                isDoorKey: slot.isDoorKey || false,
+                doorId: slot.doorId,
+            };
+
+            droppedItems.push(dropped);
+
+            // Decrement or remove from inventory
+            if (slot.count > 1) {
+                slot.count--;
+            } else {
+                inventory[activeSlot] = null;
+            }
+            renderInventory();
+            saveInventory();
+
+            feedbacks.push({ text: `- ${slot.label}`, x: player.x + 16, y: player.y - 10, alpha: 1.0, vy: -0.5, color: '#ff8888' });
+        }
+
         // ── PLAYER ────────────────────────────────────────────────
         const player = {
-            x: 100, y: WORLD_HEIGHT - 200, prevY: WORLD_HEIGHT - 200,
+            x: 1500, y: 950, prevY: WORLD_HEIGHT - 200,
             width: 32, height: 32, velocityX: 0, velocityY: 0,
-            speed: 3
+            speed: 2
         };
 
         const camera = { x: player.x, y: player.y, zoom: 2 };
@@ -481,21 +602,16 @@
         ];
 
         const walls = [
-            { x: 0,              y: -130, width: WORLD_WIDTH, height: 20 },              // ceiling
-            { x: 0,              y: -130, width: 20,          height: WORLD_HEIGHT + 200 }, // left
-            { x: WORLD_WIDTH-20, y: -130, width: 20,          height: WORLD_HEIGHT + 200 }, // right
+            { x: 0, y: -130, width: WORLD_WIDTH, height: 20 },
+            { x: 0, y: -130, width: 20, height: WORLD_HEIGHT + 200 },
+            { x: WORLD_WIDTH - 20, y: -130, width: 20, height: WORLD_HEIGHT + 200 },
         ];
 
-        // 4 border doors — each flush with its wall
-        // doorSide: 'top'|'bottom'|'left'|'right'
         const DOOR_W = 80; const DOOR_THICK = 20;
         const doors = [
-            { id: 'north', side: 'top',    x: WORLD_WIDTH/2 - DOOR_W/2, y: -130,              width: DOOR_W, height: DOOR_THICK, label: 'N' },
-            { id: 'south', side: 'bottom', x: WORLD_WIDTH/2 - DOOR_W/2, y: GROUND_Y,          width: DOOR_W, height: DOOR_THICK, label: 'S' },
-            { id: 'west',  side: 'left',   x: 0,                         y: (GROUND_Y + (-110))/2 - DOOR_W/2, width: DOOR_THICK, height: DOOR_W, label: 'W' },
-            { id: 'east',  side: 'right',  x: WORLD_WIDTH - DOOR_THICK,  y: (GROUND_Y + (-110))/2 - DOOR_W/2, width: DOOR_THICK, height: DOOR_W, label: 'E' },
+            { id: 'main', side: 'bottom', x: WORLD_WIDTH / 2 - DOOR_W / 2, y: GROUND_Y, width: DOOR_W, height: DOOR_THICK, label: 'S' },
         ];
-        const door = doors; // keep legacy alias
+        const door = doors;
 
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
@@ -551,9 +667,16 @@
         let isTransitioning = false;
 
         function fadeToLevel(url) {
+
             if (isTransitioning) return;
+
+            // SAVE INVENTORY BEFORE CHANGING ROOM
+            saveInventory();
+
             isTransitioning = true;
+
             fadeOverlay.classList.add('fading');
+
             setTimeout(() => {
                 window.location.href = url;
             }, 2000);
@@ -572,11 +695,10 @@
                 renderInventory();
             }
             if (e.code === 'KeyE') { tryInteract(); }
+            if (e.code === 'KeyG') { dropActiveItem(); }
         });
         document.addEventListener('keyup', e => keys[e.code] = false);
-        document.addEventListener('wheel', e => {
-            camera.zoom = Math.max(0.5, Math.min(3, camera.zoom + e.deltaY * -0.001));
-        });
+        ;
 
         // ── PROXIMITY HELPERS ─────────────────────────────────────
         const pickupPromptEl = document.getElementById('pickup-prompt');
@@ -584,6 +706,13 @@
 
         function getNearbyItem() {
             const reach = 55;
+            // Check dropped items first (on top of world items)
+            for (let item of droppedItems) {
+                if (item.collected) continue;
+                const dx = (player.x + player.width / 2) - (item.x + item.width / 2);
+                const dy = (player.y + player.height / 2) - (item.y + item.height / 2);
+                if (Math.abs(dx) < reach && Math.abs(dy) < reach) return item;
+            }
             for (let item of worldItems) {
                 if (!item.isNote && !item.isLockbox && item.collected) continue;
                 const dx = (player.x + player.width / 2) - (item.x + item.width / 2);
@@ -616,11 +745,11 @@
         }
 
         function hasItem(id) {
-            return inventory.some(slot => slot && slot.id === id);
+            // Check inventory for exact id OR base door key id
+            return inventory.some(slot => slot && (slot.id === id || slot.baseId === id));
         }
 
         function tryInteract() {
-            // Door takes priority if nearby
             const nearDoor = getNearDoor();
             if (nearDoor) {
                 const keyId = 'key_' + nearDoor.id;
@@ -636,29 +765,33 @@
             if (!item) return;
             if (item.isNote) { openNote(item); return; }
             if (item.isLockbox) { openLockbox(item); return; }
-            const added = addToInventory(item);
+
+            // Determine the id to use for stacking — use baseId if it's a dropped re-pickup
+            const stackId = item.baseId || item.id;
+            const invItem = { ...item, id: stackId };
+            const added = addToInventory(invItem);
             if (added) {
                 item.collected = true;
-                feedbacks.push({ text: `+ ${item.label}`, x: player.x + 16, y: player.y - 10, alpha: 1.0, vy: -0.5 });
+                feedbacks.push({ text: `+ ${item.label}`, x: player.x + 16, y: player.y - 10, alpha: 1.0, vy: -0.5, color: '#ffd700' });
             }
         }
 
         // ── COLLISION ─────────────────────────────────────────────
         const obstacles = [
-            { x: 500,  y: 300, width: 120, height: 60 },
-            { x: 900,  y: 400, width: 80,  height: 80 },
+            { x: 500, y: 300, width: 120, height: 60 },
+            { x: 900, y: 400, width: 80, height: 80 },
             { x: 1400, y: 350, width: 150, height: 50 },
             { x: 1800, y: 300, width: 100, height: 80 },
             { x: 2200, y: 450, width: 120, height: 60 },
-            { x: 2600, y: 350, width: 80,  height: 80 },
+            { x: 2600, y: 350, width: 80, height: 80 },
         ];
 
         function checkObstacleCollision() {
             for (let o of obstacles) {
-                if (player.x < o.x + o.width  && player.x + player.width  > o.x &&
-                    player.y < o.y + o.height  && player.y + player.height > o.y) {
-                    const overlapL = (player.x + player.width)  - o.x;
-                    const overlapR = (o.x + o.width)  - player.x;
+                if (player.x < o.x + o.width && player.x + player.width > o.x &&
+                    player.y < o.y + o.height && player.y + player.height > o.y) {
+                    const overlapL = (player.x + player.width) - o.x;
+                    const overlapR = (o.x + o.width) - player.x;
                     const overlapT = (player.y + player.height) - o.y;
                     const overlapB = (o.y + o.height) - player.y;
                     const minX = Math.min(overlapL, overlapR);
@@ -678,10 +811,10 @@
 
             player.velocityX = 0;
             player.velocityY = 0;
-            if (keys['KeyA'] || keys['ArrowLeft'])  player.velocityX = -player.speed;
-            if (keys['KeyD'] || keys['ArrowRight']) player.velocityX =  player.speed;
-            if (keys['KeyW'] || keys['ArrowUp'])    player.velocityY = -player.speed;
-            if (keys['KeyS'] || keys['ArrowDown'])  player.velocityY =  player.speed;
+            if (keys['KeyA'] || keys['ArrowLeft']) player.velocityX = -player.speed;
+            if (keys['KeyD'] || keys['ArrowRight']) player.velocityX = player.speed;
+            if (keys['KeyW'] || keys['ArrowUp']) player.velocityY = -player.speed;
+            if (keys['KeyS'] || keys['ArrowDown']) player.velocityY = player.speed;
 
             if (player.velocityX !== 0 && player.velocityY !== 0) {
                 player.velocityX *= 0.707;
@@ -692,7 +825,7 @@
             player.y += player.velocityY;
 
             player.x = Math.max(WORLD_LEFT + 2, Math.min(WORLD_RIGHT - player.width - 2, player.x));
-            player.y = Math.max(WORLD_TOP  + 2, Math.min(GROUND_Y    - player.height - 2, player.y));
+            player.y = Math.max(WORLD_TOP + 2, Math.min(GROUND_Y - player.height - 2, player.y));
 
             checkObstacleCollision();
         }
@@ -702,87 +835,75 @@
             camera.x += (player.x + player.width / 2 - camera.x) * lerp;
             camera.y += (player.y + player.height / 2 - camera.y) * lerp;
 
-            // Inventory bar is 56px tall + 20px from bottom = 76px from bottom
-            // We want the floor (GROUND_Y) to sit exactly at the top of the inventory
-            // screenY of a world point = canvas.height/2 + (worldY - camera.y) * zoom
-            // We want: canvas.height/2 + (GROUND_Y - camera.y) * zoom = canvas.height - 76
-            // => camera.y = GROUND_Y - (canvas.height - 76 - canvas.height/2) / zoom
-            //              = GROUND_Y - (canvas.height/2 - 76) / zoom
-            const INV_OFFSET = 76; // px from bottom to top of inventory
+            const INV_OFFSET = 76;
             const maxCamY = GROUND_Y - (canvas.height / 2 - INV_OFFSET) / camera.zoom;
 
-            // For the top clamp, use normal halfH
-            const halfW = (canvas.width  / 2) / camera.zoom;
+            const halfW = (canvas.width / 2) / camera.zoom;
             const halfH = (canvas.height / 2) / camera.zoom;
 
             camera.x = Math.max(WORLD_LEFT + halfW, Math.min(WORLD_RIGHT - halfW, camera.x));
-            camera.y = Math.max(WORLD_TOP  + halfH, Math.min(maxCamY,             camera.y));
+            camera.y = Math.max(WORLD_TOP + halfH, Math.min(maxCamY, camera.y));
         }
 
         // ── DRAW ──────────────────────────────────────────────────
-        let playerDir = 'down';
-        function drawPlayer() {
-            // Update facing direction
-            if (player.velocityX < 0) playerDir = 'left';
-            else if (player.velocityX > 0) playerDir = 'right';
-            else if (player.velocityY < 0) playerDir = 'up';
-            else if (player.velocityY > 0) playerDir = 'down';
 
+        function drawPlayer() {
             const cx = player.x + player.width / 2;
             const cy = player.y + player.height / 2;
             const r = player.width / 2;
-
-            // Shadow
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.beginPath();
-            ctx.ellipse(cx, cy + r * 0.8, r * 0.9, r * 0.35, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Body
             ctx.fillStyle = '#e05555';
             ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+        }
 
-            // Direction indicator (eyes / nose direction)
-            const dirs = { up: [0,-1], down: [0,1], left: [-1,0], right: [1,0] };
-            const [dx, dy] = dirs[playerDir];
-            ctx.fillStyle = '#fff';
-            ctx.beginPath(); ctx.arc(cx + dx * r * 0.45, cy + dy * r * 0.45, r * 0.25, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#222';
-            ctx.beginPath(); ctx.arc(cx + dx * r * 0.5, cy + dy * r * 0.5, r * 0.12, 0, Math.PI * 2); ctx.fill();
+        function drawSingleItem(item, bobY) {
+            const cx = item.x + item.width / 2;
+            const cy = bobY + item.height / 2;
+            const gc = item.isLockbox ? (item.unlocked ? 'rgba(68,255,136,' : 'rgba(255,80,80,') : 'rgba(255,215,0,';
+            const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 28);
+            grad.addColorStop(0, gc + '0.35)');
+            grad.addColorStop(1, gc + '0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(cx, cy, 28, 0, Math.PI * 2); ctx.fill();
+
+            if (item.isLockbox) {
+                ctx.fillStyle = item.unlocked ? '#1a3a2a' : '#2a1a1a';
+                ctx.strokeStyle = item.unlocked ? '#44ff88' : '#ff5050';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(item.x, bobY, item.width, item.height, 5);
+                ctx.fill(); ctx.stroke();
+                ctx.font = '22px serif';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(item.unlocked ? '📭' : '🔒', cx, cy);
+                ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+            } else {
+                ctx.font = `${item.width}px serif`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(item.icon, cx, cy);
+                ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+            }
         }
 
         function drawWorldItems() {
             const t = Date.now() / 600;
+
+            // Draw static world items
             worldItems.forEach((item, idx) => {
                 if (!item.isNote && !item.isLockbox && item.collected) return;
                 const bobY = item.y + Math.sin(t + idx * 1.3) * 4;
-                const cx = item.x + item.width / 2;
-                const cy = bobY + item.height / 2;
+                drawSingleItem(item, bobY);
+            });
 
-                const gc = item.isLockbox ? (item.unlocked ? 'rgba(68,255,136,' : 'rgba(255,80,80,') : 'rgba(255,215,0,';
-                const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 28);
-                grad.addColorStop(0, gc + '0.35)');
-                grad.addColorStop(1, gc + '0)');
-                ctx.fillStyle = grad;
-                ctx.beginPath(); ctx.arc(cx, cy, 28, 0, Math.PI * 2); ctx.fill();
+            // Draw dropped items with a subtle "dropped" indicator
+            droppedItems.forEach((item, idx) => {
+                if (item.collected) return;
+                const bobY = item.y + Math.sin(t + idx * 2.1 + 99) * 3;
 
-                if (item.isLockbox) {
-                    ctx.fillStyle = item.unlocked ? '#1a3a2a' : '#2a1a1a';
-                    ctx.strokeStyle = item.unlocked ? '#44ff88' : '#ff5050';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.roundRect(item.x, bobY, item.width, item.height, 5);
-                    ctx.fill(); ctx.stroke();
-                    ctx.font = '22px serif';
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    ctx.fillText(item.unlocked ? '📭' : '🔒', cx, cy);
-                    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-                } else {
-                    ctx.font = `${item.width}px serif`;
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    ctx.fillText(item.icon, cx, cy);
-                    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-                }
+                // Slightly dimmer glow to distinguish dropped items
+                ctx.globalAlpha = 0.88;
+                drawSingleItem(item, bobY);
+                ctx.globalAlpha = 1;
+
             });
         }
 
@@ -790,7 +911,8 @@
             ctx.save();
             for (let i = feedbacks.length - 1; i >= 0; i--) {
                 const f = feedbacks[i];
-                ctx.globalAlpha = f.alpha; ctx.fillStyle = '#ffd700';
+                ctx.globalAlpha = f.alpha;
+                ctx.fillStyle = f.color || '#ffd700';
                 ctx.font = 'bold 13px monospace';
                 ctx.fillText(f.text, f.x, f.y);
                 f.y += f.vy; f.alpha -= 0.012;
@@ -799,14 +921,11 @@
             ctx.globalAlpha = 1; ctx.restore();
         }
 
-        // World visible area (inside the border walls)
-        const WORLD_LEFT   = 20;           // left wall width
-        const WORLD_RIGHT  = WORLD_WIDTH - 20;  // right wall x
-        const WORLD_TOP    = -110;         // ceiling y (inside face of 20px ceiling slab at y=-130)
-        // floor bottom = GROUND_Y + 20 (floor slab bottom)
+        const WORLD_LEFT = 20;
+        const WORLD_RIGHT = WORLD_WIDTH - 20;
+        const WORLD_TOP = -110;
 
         function drawEnvironment() {
-            // ── floor (tiled) ─────────────────────────────────────
             const tileSize = 48;
             for (let tx = WORLD_LEFT; tx < WORLD_RIGHT; tx += tileSize) {
                 for (let ty = WORLD_TOP; ty < GROUND_Y; ty += tileSize) {
@@ -816,36 +935,31 @@
                 }
             }
 
-            // ── border walls ──────────────────────────────────────
             const BORDER = '#111';
             ctx.fillStyle = BORDER;
-            ctx.fillRect(-500, -500, WORLD_LEFT + 500, WORLD_HEIGHT + 1000); // left
-            ctx.fillRect(WORLD_RIGHT, -500, 500, WORLD_HEIGHT + 1000);       // right
-            ctx.fillRect(-500, -500, WORLD_WIDTH + 1000, WORLD_TOP + 500);   // top
-            ctx.fillRect(-500, GROUND_Y, WORLD_WIDTH + 1000, 500);           // bottom
+            ctx.fillRect(-500, -500, WORLD_LEFT + 500, WORLD_HEIGHT + 1000);
+            ctx.fillRect(WORLD_RIGHT, -500, 500, WORLD_HEIGHT + 1000);
+            ctx.fillRect(-500, -500, WORLD_WIDTH + 1000, WORLD_TOP + 500);
+            ctx.fillRect(-500, GROUND_Y, WORLD_WIDTH + 1000, 500);
 
-            // Wall edge lines
             ctx.strokeStyle = '#333'; ctx.lineWidth = 3;
             ctx.strokeRect(WORLD_LEFT, WORLD_TOP, WORLD_RIGHT - WORLD_LEFT, GROUND_Y - WORLD_TOP);
 
-            // ── obstacles (furniture) ─────────────────────────────
             obstacles.forEach(o => {
                 ctx.fillStyle = '#2d2218';
                 ctx.fillRect(o.x, o.y, o.width, o.height);
                 ctx.strokeStyle = '#5a3e28'; ctx.lineWidth = 2;
                 ctx.strokeRect(o.x, o.y, o.width, o.height);
-                // Shadow on bottom/right
                 ctx.fillStyle = 'rgba(0,0,0,0.4)';
                 ctx.fillRect(o.x + 4, o.y + o.height, o.width, 4);
                 ctx.fillRect(o.x + o.width, o.y + 4, 4, o.height);
             });
 
-            // ── border doors ──────────────────────────────────────
             doors.forEach(d => {
-                const hasKey = inventory.some(s => s && s.id === 'key_' + d.id);
-                const col    = hasKey ? '#1a2e1a' : '#1a1a2e';
+                const hasKey = inventory.some(s => s && (s.id === 'key_' + d.id || s.baseId === 'key_' + d.id));
+                const col = hasKey ? '#1a2e1a' : '#1a1a2e';
                 const stroke = hasKey ? '#44cc55' : '#4455cc';
-                const glow   = hasKey ? '#44ff66' : '#5566ff';
+                const glow = hasKey ? '#44ff66' : '#5566ff';
                 const cx = d.x + d.width / 2;
                 const cy = d.y + d.height / 2;
 
@@ -874,11 +988,9 @@
             updatePlayer();
             updateCamera();
 
-            // Determine what prompt to show
-            const nearDoor = isNearDoor(); // bool for prompt visibility
+            const nearDoorObj = getNearDoor();
             const nearItem = getNearbyItem();
 
-            const nearDoorObj = getNearDoor();
             if (nearDoorObj) {
                 pickupPromptEl.textContent = `🚪 Press E to go ${nearDoorObj.id.toUpperCase()} (${nearDoorObj.label})`;
                 pickupPromptEl.classList.add('visible');
@@ -892,13 +1004,12 @@
                 pickupPromptEl.classList.remove('visible');
             }
 
-            // Compute screen-space clip rect for the inner world bounds
             const tx = canvas.width / 2 - camera.x * camera.zoom;
             const ty = canvas.height / 2 - camera.y * camera.zoom;
-            const clipX = WORLD_LEFT  * camera.zoom + tx;
-            const clipY = WORLD_TOP   * camera.zoom + ty;
+            const clipX = WORLD_LEFT * camera.zoom + tx;
+            const clipY = WORLD_TOP * camera.zoom + ty;
             const clipW = (WORLD_RIGHT - WORLD_LEFT) * camera.zoom;
-            const clipH = (GROUND_Y   - WORLD_TOP)  * camera.zoom;
+            const clipH = (GROUND_Y - WORLD_TOP) * camera.zoom;
 
             ctx.save();
             ctx.beginPath();
@@ -916,7 +1027,7 @@
             ctx.restore();
             requestAnimationFrame(gameLoop);
         }
-
+        loadInventory();
         renderInventory();
         gameLoop();
     </script>
