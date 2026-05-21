@@ -346,7 +346,7 @@ const worldItems = [
 
     // NE room
     { id: 'note_2',   icon: '📄', label: 'Note #2',   x: CX+CORRIDOR_W + (W-CX-CORRIDOR_W)/2 - 14, y: CY/2 - 14, width: 28, height: 28, collected: false, isNote: true,    noteTitle: 'Note #2', noteContent: '6' },
-    { id: 'key_east', icon: '🔑', label: 'East Key', x: CX+CORRIDOR_W + (W-CX-CORRIDOR_W)/2 + 60, y: CY/2 + 60, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'east' },
+    { id: 'key_north', icon: '🔑', label: 'North Key', x: CX+CORRIDOR_W + (W-CX-CORRIDOR_W)/2 + 60, y: CY/2 + 60, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'north' },
 
     // SW room
     { id: 'note_3', icon: '📄', label: 'Note #3', x: CX/2 - 14, y: CY+CORRIDOR_H + (H-CY-CORRIDOR_H)/2 - 14, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #3', noteContent: '5' },
@@ -357,6 +357,99 @@ const worldItems = [
     // Corridor center
     { id: 'lockbox', icon: '📦', label: 'Lock Box', x: CX + CORRIDOR_W/2 - 25, y: CY + CORRIDOR_H/2 - 25, width: 50, height: 50, collected: false, isLockbox: true, unlocked: false },
 ];
+
+// ── TEXTURED OBJECTS ──────────────────────────────────────────────────
+// Static world objects that display an image texture.
+// To add a texture later, set the `texture` field to a path or URL:
+//   texture: 'myimage.png'   or   texture: 'https://example.com/img.jpg'
+//
+// Fields:
+//   id            – unique string
+//   x, y          – world position (top-left corner)
+//   width, height – size in world pixels
+//   texture       – image path/URL, or null to show placeholder
+//   label         – shown in the interact prompt
+//   solid         – true = player cannot walk through it
+const texturedObjects = [
+    {
+        id: 'textured_obj_1',
+        x: CX + CORRIDOR_W/2 + 80,
+        y: CY + CORRIDOR_H/2 - 32,
+        width: 64,
+        height: 64,
+        texture: null,   // ← PUT YOUR IMAGE PATH/URL HERE
+        label: 'Object',
+        solid: true,
+    },
+];
+
+// Pre-load textures into Image objects so they are ready each frame.
+// Call loadTextures() again if you update a texture at runtime.
+const _texCache = {};
+function loadTextures() {
+    for (const obj of texturedObjects) {
+        if (obj.texture && !_texCache[obj.texture]) {
+            const img = new Image();
+            img.src = obj.texture;
+            _texCache[obj.texture] = img;
+        }
+    }
+}
+loadTextures();
+
+function drawTexturedObjects() {
+    for (const obj of texturedObjects) {
+        const img = obj.texture ? _texCache[obj.texture] : null;
+
+        if (img && img.complete && img.naturalWidth > 0) {
+            // Actual texture
+            ctx.drawImage(img, obj.x, obj.y, obj.width, obj.height);
+        } else {
+            // Placeholder: dark box with dashed border and frame icon
+            ctx.fillStyle = '#2a2a3a';
+            ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = '#6666aa';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(obj.x + 1, obj.y + 1, obj.width - 2, obj.height - 2);
+            ctx.setLineDash([]);
+            ctx.font = (Math.min(obj.width, obj.height) * 0.45) + 'px serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'rgba(180,180,220,0.5)';
+            ctx.fillText('\uD83D\uDDBC\uFE0F', obj.x + obj.width/2, obj.y + obj.height/2);
+            ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        }
+
+        // Gold highlight when player is in range
+        const reach = 60;
+        const dx = (player.x + player.width/2)  - (obj.x + obj.width/2);
+        const dy = (player.y + player.height/2) - (obj.y + obj.height/2);
+        if (Math.abs(dx) < reach && Math.abs(dy) < reach) {
+            ctx.strokeStyle = 'rgba(255,215,0,0.7)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([]);
+            ctx.strokeRect(obj.x - 2, obj.y - 2, obj.width + 4, obj.height + 4);
+        }
+    }
+}
+
+// Returns collision walls for solid textured objects (fed into getWalls).
+function getTexturedObjectWalls() {
+    return texturedObjects
+        .filter(o => o.solid)
+        .map(o => ({ x: o.x, y: o.y, w: o.width, h: o.height }));
+}
+
+// Returns the nearest textured object within interact range, or null.
+function getNearTexturedObject() {
+    const reach = 60;
+    for (const obj of texturedObjects) {
+        const dx = (player.x + player.width/2)  - (obj.x + obj.width/2);
+        const dy = (player.y + player.height/2) - (obj.y + obj.height/2);
+        if (Math.abs(dx) < reach && Math.abs(dy) < reach) return obj;
+    }
+    return null;
+}
 
 const droppedItems = [];
 let dropIdCounter = 0;
@@ -413,7 +506,7 @@ const player = {
     y: _spawn.y,
     width: 32, height: 32,
     velocityX: 0, velocityY: 0,
-    speed: 5,
+    speed: 2.8,
 };
 
 const camera = { x: player.x, y: player.y, zoom: 1.4 };
@@ -692,6 +785,9 @@ function getWalls() {
     addDoorWall(ROOM_DOORS.find(d => d.roomId === 'SW'), CX, CY+CORRIDOR_H, H-CY-CORRIDOR_H);
     addDoorWall(ROOM_DOORS.find(d => d.roomId === 'NE'), RX, 0,             CY);
     addDoorWall(ROOM_DOORS.find(d => d.roomId === 'SE'), RX, CY+CORRIDOR_H, H-CY-CORRIDOR_H);
+
+    // Add solid textured objects as collision walls
+    for (const w of getTexturedObjectWalls()) walls.push(w);
 
     return walls;
 }
@@ -974,6 +1070,9 @@ function gameLoop() {
             nearItem.isLockbox ? `Press E to open ${nearItem.label}` :
                                  `Press E to pick up ${nearItem.label}`;
         pickupPromptEl.classList.add('visible');
+    } else if (getNearTexturedObject()) {
+        pickupPromptEl.textContent = `Press E to inspect ${getNearTexturedObject().label}`;
+        pickupPromptEl.classList.add('visible');
     } else {
         pickupPromptEl.classList.remove('visible');
     }
@@ -986,6 +1085,7 @@ function gameLoop() {
 
     drawEnvironment();
     drawWorldItems();
+    drawTexturedObjects();
     drawPlayer();
     drawFeedbacks();
 
