@@ -341,8 +341,30 @@ function loadWorldItemState() {
 // ── WORLD ITEMS ───────────────────────────────────────────────────────
 const worldItems = [
     // NW room
-    { id: 'note_1',    icon: '📄', label: 'Note #1',   x: CX/2 - 14,       y: CY/2 - 14,       width: 28, height: 28, collected: false, isNote: true,    noteTitle: 'Note #1', noteContent: '6' },
-    { id: 'key_west',  icon: '🔑', label: 'West Key',  x: CX/2 + 60,       y: CY/2 + 60,       width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'west' },
+    { 
+        id: 'note_1',
+        icon: '📄',
+        label: 'Note #1',
+        x: CX/2 - 14,
+        y: CY/2 - 14,
+        width: 28,
+        height: 28,
+        collected: false,
+        isNote: true,
+        noteTitle: 'Note #1',
+        noteContent: '6' },
+
+    { 
+        id: 'key_west',
+        icon: '🔑',
+        label: 'West Key',
+        x: CX/2 + 60,
+        y: CY/2 + 60,
+        width: 28,
+        height: 28,
+        collected: false,
+    isDoorKey: true,
+    doorId: 'west' },
 
     // NE room
     { id: 'note_2',   icon: '📄', label: 'Note #2',   x: CX+CORRIDOR_W + (W-CX-CORRIDOR_W)/2 - 14, y: CY/2 - 14, width: 28, height: 28, collected: false, isNote: true,    noteTitle: 'Note #2', noteContent: '6' },
@@ -373,14 +395,29 @@ const worldItems = [
 const texturedObjects = [
     {
         id: 'textured_obj_1',
-        x: CX + CORRIDOR_W/2 + 80,
-        y: CY + CORRIDOR_H/2 - 32,
+        x: CX + CORRIDOR_W/2 + 300,
+        y: CY + CORRIDOR_H/2 - 170,
         width: 64,
         height: 64,
         texture: null,   // ← PUT YOUR IMAGE PATH/URL HERE
         label: 'Object',
         solid: true,
     },
+
+    {
+        id: 'textured_obj_2',
+        x: CX + CORRIDOR_W/2 - 300,
+        y: CY + CORRIDOR_H/2 + 120,
+        width: 80,
+        height: 40,
+        texture: null,   // ← PUT YOUR IMAGE PATH/URL HERE
+        label: 'Another Object',
+        solid: true,
+    },
+
+    {
+        
+    }
 ];
 
 // Pre-load textures into Image objects so they are ready each frame.
@@ -506,7 +543,7 @@ const player = {
     y: _spawn.y,
     width: 32, height: 32,
     velocityX: 0, velocityY: 0,
-    speed: 2.8,
+    speed: 5,
 };
 
 const camera = { x: player.x, y: player.y, zoom: 1.4 };
@@ -676,7 +713,7 @@ function tryInteract() {
         if (hasItem(keyId)) {
             fadeToLevel(`level_${nearExit.id}.html`, nearExit.id);
         } else {
-            showDoorMsg(`🔒 Need the ${nearExit.id.charAt(0).toUpperCase()+nearExit.id.slice(1)} Key`);
+            showDoorMsg(` Need the ${nearExit.id.charAt(0).toUpperCase()+nearExit.id.slice(1)} Key`);
         }
         return;
     }
