@@ -280,7 +280,7 @@ const exitDoors = [
     { id: 'north', side: 'top',    x: CX + CORRIDOR_W/2 - EXIT_DOOR_SIZE/2, y: 0,                w: EXIT_DOOR_SIZE, h: EXIT_DOOR_THICK, label: 'N' },
     { id: 'south', side: 'bottom', x: CX + CORRIDOR_W/2 - EXIT_DOOR_SIZE/2, y: H - EXIT_DOOR_THICK, w: EXIT_DOOR_SIZE, h: EXIT_DOOR_THICK, label: 'S' },
     { id: 'west',  side: 'left',   x: 0,                y: CY + CORRIDOR_H/2 - EXIT_DOOR_SIZE/2, w: EXIT_DOOR_THICK, h: EXIT_DOOR_SIZE,  label: 'W' },
-    { id: 'east',  side: 'right',  x: W - EXIT_DOOR_THICK, y: CY + CORRIDOR_H/2 - EXIT_DOOR_SIZE/2, w: EXIT_DOOR_THICK, h: EXIT_DOOR_SIZE,  label: 'E' },
+    { id: 'main',  side: 'right',  x: W - EXIT_DOOR_THICK, y: CY + CORRIDOR_H/2 - EXIT_DOOR_SIZE/2, w: EXIT_DOOR_THICK, h: EXIT_DOOR_SIZE,  label: 'M' },
 ];
 
 // ── LOCK CODE ─────────────────────────────────────────────────────────
@@ -374,7 +374,7 @@ const worldItems = [
     { id: 'note_4', icon: '📄', label: 'Note #4', x: CX + 200, y: CY + 220, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #4', noteContent: '8' },
     { id: 'lockbox', icon: '📦', label: 'Lock Box', x: CX + CORRIDOR_W/2 - 25, y: CY + CORRIDOR_H/2 - 25, width: 50, height: 50, collected: false, isLockbox: true, unlocked: false },
     { id: 'key_west', icon: '🔑', label: 'West Key', x: 1000, y: 500, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'west' },
-    { id: 'key_main', icon: '🔑', label: 'Main Key', x: 2500, y: 800, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'north' },
+    { id: 'key_main', icon: '🔑', label: 'Main Key', x: CX + CORRIDOR_W/2 + 80 , y: CY + CORRIDOR_H/2 + 80 , width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'north' },
 ];
 
 const droppedItems = [];
