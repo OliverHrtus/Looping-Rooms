@@ -266,9 +266,10 @@
         // West:  left of horizontal corridor, centered (y = 625 + 175 - 40 = 760)
         // Main:  right edge (x = 2180)
         const exitDoors = [
-            
-            { id: 'main', side: 'bottom', x: 1060, y: 1580, w: 80, h: 20, label: 'M' },
-            
+            { id: 'north', side: 'top',    x: 1060, y: 0,    w: 80, h: 20, label: 'N' },
+            { id: 'south', side: 'bottom', x: 1060, y: 1580, w: 80, h: 20, label: 'S' },
+            { id: 'west',  side: 'left',   x: 0,    y: 760,  w: 20, h: 80, label: 'W' },
+            { id: 'main',  side: 'right',  x: 2180, y: 760,  w: 20, h: 80, label: 'M' },
         ];
 
         // ── WORLD ITEMS (all positions hardcoded in pixels) ───────────────────
@@ -282,7 +283,7 @@
             // Lockbox at corridor center: x=1100-25=1075, y=800-25=775
             { id: 'lockbox', icon: '📦', label: 'Lock Box', x: 1075, y: 775, width: 50, height: 50, collected: false, isLockbox: true, unlocked: false },
             // Keys
-            { id: 'key_east', icon: '🔑', label: 'East Key',  x: 1000, y: 500,  width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'east' },
+            { id: 'key_west', icon: '🔑', label: 'West Key',  x: 1000, y: 500,  width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'west' },
             { id: 'key_main', icon: '🔑', label: 'Main Key',  x: 1255, y: 855,  width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'north' },
         ];
 
@@ -313,7 +314,7 @@
         // ── PLAYER ────────────────────────────────────────────────────────────
         // Start at corridor center: x=1100-16=1084, y=800-16=784
         const player = {
-           x: 1060, y: 1490,
+            x: 1084, y: 784,
             width: 32, height: 32,
             velocityX: 0, velocityY: 0,
             speed: 2.8,

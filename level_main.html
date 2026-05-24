@@ -328,14 +328,6 @@
         #active-item-label.visible {
             opacity: 1;
         }
-
-        /* Room overlay – covers each room until entered */
-        #room-overlay {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 5;
-        }
     </style>
 </head>
 
@@ -402,61 +394,38 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // ── WORLD LAYOUT ──────────────────────────────────────────────────────
-        const CORRIDOR_H = 350;
-        const CORRIDOR_W = 350;
+        // ── WORLD SIZE ────────────────────────────────────────────────────────
+        // World: 2200 x 1600 px
+        // Cross-shaped corridor: horizontal strip (y=625..975, full width)
+        //                        vertical strip   (x=925..1275, full height)
+        // Four corner rooms: NW(0,0,925,625) NE(1275,0,925,625)
+        //                    SW(0,975,925,625) SE(1275,975,925,625)
 
-        const W = 2200;
-        const H = 1600;
-
-        const CX = (W - CORRIDOR_W) / 2;
-        const CY = (H - CORRIDOR_H) / 2;
-
+        // ── ROOMS ─────────────────────────────────────────────────────────────
         const ROOMS = {
-            NW: { x: 0, y: 0, w: CX, h: CY, id: 'NW', entered: false, doorSide: 'SE' },
-            NE: { x: CX + CORRIDOR_W, y: 0, w: W - CX - CORRIDOR_W, h: CY, id: 'NE', entered: false, doorSide: 'SW' },
-            SW: { x: 0, y: CY + CORRIDOR_H, w: CX, h: H - CY - CORRIDOR_H, id: 'SW', entered: false, doorSide: 'NE' },
-            SE: { x: CX + CORRIDOR_W, y: CY + CORRIDOR_H, w: W - CX - CORRIDOR_W, h: H - CY - CORRIDOR_H, id: 'SE', entered: false, doorSide: 'NW' },
+            NW: { x: 0, y: 0, w: 925, h: 625, id: 'NW' },
+            NE: { x: 1275, y: 0, w: 925, h: 625, id: 'NE' },
+            SW: { x: 0, y: 975, w: 925, h: 625, id: 'SW' },
+            SE: { x: 1275, y: 975, w: 925, h: 625, id: 'SE' },
         };
 
-        const DOOR_SIZE = 70;
-
+        // ── ROOM DOORS (purple, open when player enters room) ─────────────────
+        // NW/SW doors on x=925 (left corridor wall)
+        // NE/SE doors on x=1263 (right corridor wall, 12px thick)
+        // Door height = 70px, centered vertically in the room's corridor-facing half
         const ROOM_DOORS = [
-            {
-                id: 'door_NW', roomId: 'NW',
-                x: CX, y: CY / 2 - DOOR_SIZE / 2,
-                w: 12, h: DOOR_SIZE,
-                side: 'east', openAnim: 0, isOpen: false,
-            },
-            {
-                id: 'door_NE', roomId: 'NE',
-                x: CX + CORRIDOR_W - 12, y: CY / 2 - DOOR_SIZE / 2,
-                w: 12, h: DOOR_SIZE,
-                side: 'west', openAnim: 0, isOpen: false,
-            },
-            {
-                id: 'door_SW', roomId: 'SW',
-                x: CX, y: CY + CORRIDOR_H + (H - CY - CORRIDOR_H) / 2 - DOOR_SIZE / 2,
-                w: 12, h: DOOR_SIZE,
-                side: 'east', openAnim: 0, isOpen: false,
-            },
-            {
-                id: 'door_SE', roomId: 'SE',
-                x: CX + CORRIDOR_W - 12, y: CY + CORRIDOR_H + (H - CY - CORRIDOR_H) / 2 - DOOR_SIZE / 2,
-                w: 12, h: DOOR_SIZE,
-                side: 'west', openAnim: 0, isOpen: false,
-            },
+            { id: 'door_NW', roomId: 'NW', x: 925, y: 277.5, w: 12, h: 70, side: 'east', openAnim: 0, isOpen: false },
+            { id: 'door_NE', roomId: 'NE', x: 1263, y: 277.5, w: 12, h: 70, side: 'west', openAnim: 0, isOpen: false },
+            { id: 'door_SW', roomId: 'SW', x: 925, y: 1252.5, w: 12, h: 70, side: 'east', openAnim: 0, isOpen: false },
+            { id: 'door_SE', roomId: 'SE', x: 1263, y: 1252.5, w: 12, h: 70, side: 'west', openAnim: 0, isOpen: false },
         ];
 
-        // ── CORRIDOR EXIT DOORS (N/S/E/W) ────────────────────────────────────
-        const EXIT_DOOR_SIZE = 80;
-        const EXIT_DOOR_THICK = 20;
-
+        // ── EXIT DOORS (N/S/E/W, require keys) ───────────────────────────────
         const exitDoors = [
-            { id: 'north', side: 'top', x: CX + CORRIDOR_W / 2 - EXIT_DOOR_SIZE / 2, y: 0, w: EXIT_DOOR_SIZE, h: EXIT_DOOR_THICK, label: 'N' },
-            { id: 'south', side: 'bottom', x: CX + CORRIDOR_W / 2 - EXIT_DOOR_SIZE / 2, y: H - EXIT_DOOR_THICK, w: EXIT_DOOR_SIZE, h: EXIT_DOOR_THICK, label: 'S' },
-            { id: 'west', side: 'left', x: 0, y: CY + CORRIDOR_H / 2 - EXIT_DOOR_SIZE / 2, w: EXIT_DOOR_THICK, h: EXIT_DOOR_SIZE, label: 'W' },
-            { id: 'east', side: 'right', x: W - EXIT_DOOR_THICK, y: CY + CORRIDOR_H / 2 - EXIT_DOOR_SIZE / 2, w: EXIT_DOOR_THICK, h: EXIT_DOOR_SIZE, label: 'E' },
+            { id: 'north', x: 1060, y: 0, w: 80, h: 20, label: 'N' },
+            { id: 'exit', x: 1060, y: 1580, w: 80, h: 20, label: 'E' },
+            { id: 'west', x: 0, y: 760, w: 20, h: 80, label: 'W' },
+            { id: 'east', x: 2180, y: 760, w: 20, h: 80, label: 'E' },
         ];
 
         // ── LOCK CODE ─────────────────────────────────────────────────────────
@@ -464,7 +433,12 @@
 
         // ── LOCKBOX UI ────────────────────────────────────────────────────────
         const lbDigits = [0, 0, 0, 0];
-        const lbNumEls = [document.getElementById('dn0'), document.getElementById('dn1'), document.getElementById('dn2'), document.getElementById('dn3')];
+        const lbNumEls = [
+            document.getElementById('dn0'),
+            document.getElementById('dn1'),
+            document.getElementById('dn2'),
+            document.getElementById('dn3'),
+        ];
 
         function lbChangeDigit(idx, dir) {
             lbDigits[idx] = (lbDigits[idx] + dir + 10) % 10;
@@ -486,7 +460,7 @@
                 msg.textContent = '✓ Unlocked!'; msg.className = 'lb-msg success';
                 document.getElementById('lb-icon').textContent = '📭';
                 if (currentLockbox) currentLockbox.unlocked = true;
-                addToInventory({ id: 'elevator_card', icon: '🪪', label: 'Elevator Card', count: 1 });
+                addToInventory({ id: 'key_exit', icon: '🪪', label: 'Exit Card', count: 1 });
                 setTimeout(closeLockbox, 1200);
             } else {
                 msg.textContent = '✗ Wrong code'; msg.className = 'lb-msg error';
@@ -494,21 +468,17 @@
         });
 
         // ── INVENTORY ─────────────────────────────────────────────────────────
-        // Uses sessionStorage so inventory resets when the browser tab/window is closed.
-        // Within the same session, inventory persists across level transitions.
         const INVENTORY_SIZE = 5;
         const inventory = Array(INVENTORY_SIZE).fill(null);
         let activeSlot = 0;
 
         function saveInventory() {
-            // Save with a timestamp to both stores. loadInventory picks the freshest copy.
             const payload = JSON.stringify({ ts: Date.now(), slots: inventory });
             try { sessionStorage.setItem('looping_rooms_inventory', payload); } catch (e) { }
             try { localStorage.setItem('looping_rooms_inventory', payload); } catch (e) { }
         }
+
         function loadInventory() {
-            // Read both sessionStorage and localStorage, use whichever has the newer timestamp.
-            // This survives any level page wiping sessionStorage on its own init.
             let best = null;
             for (const store of [sessionStorage, localStorage]) {
                 try {
@@ -523,8 +493,6 @@
             for (let i = 0; i < INVENTORY_SIZE; i++) inventory[i] = best.slots[i] || null;
             renderInventory();
         }
-
-
 
         function addToInventory(item) {
             for (let i = 0; i < INVENTORY_SIZE; i++) {
@@ -557,21 +525,15 @@
             }
         }
 
-        window.addEventListener('pagehide', (e) => {
-            // pagehide fires on both navigation AND tab close.
-            // Only wipe when NOT going to another level page.
+        window.addEventListener('pagehide', () => {
             const inTransition = sessionStorage.getItem('looping_rooms_in_transition');
             if (!inTransition) {
                 try { localStorage.removeItem('looping_rooms_inventory'); } catch (e) { }
             }
-            // Clear the token so the next page load starts clean.
             try { sessionStorage.removeItem('looping_rooms_in_transition'); } catch (e) { }
         });
 
         // ── WORLD ITEM STATE ──────────────────────────────────────────────────
-        // Item collected state persists for the whole session (same tab).
-        // On fresh game start (no session) everything is uncollected.
-        // We save/load a simple map of { itemId: true } for collected items.
         function saveWorldItemState() {
             try {
                 const state = {};
@@ -589,91 +551,44 @@
         }
 
         // ── WORLD ITEMS ───────────────────────────────────────────────────────
+        // All positions in raw pixels. Room centers:
+        //   NW center: (462, 312)   NE center: (1737, 312)
+        //   SW center: (462, 1287)  SE center: (1737, 1287)
         const worldItems = [
             // NW room
-            {
-                id: 'note_1',
-                icon: '📄',
-                label: 'Note #1',
-                x: CX / 2 - 14,
-                y: CY / 2 - 14,
-                width: 28,
-                height: 28,
-                collected: false,
-                isNote: true,
-                noteTitle: 'Note #1',
-                noteContent: '6'
-            },
-
-            {
-                id: 'key_west',
-                icon: '🔑',
-                label: 'West Key',
-                x: CX / 2 + 60,
-                y: CY / 2 + 60,
-                width: 28,
-                height: 28,
-                collected: false,
-                isDoorKey: true,
-                doorId: 'west'
-            },
-
+            { id: 'note_1', icon: '📄', label: 'Note #1', x: 448, y: 298, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #1', noteContent: '6' },
+            { id: 'key_west', icon: '🔑', label: 'West Key', x: 522, y: 372, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'west' },
             // NE room
-            { id: 'note_2', icon: '📄', label: 'Note #2', x: CX + CORRIDOR_W + (W - CX - CORRIDOR_W) / 2 - 14, y: CY / 2 - 14, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #2', noteContent: '6' },
-            { id: 'key_north', icon: '🔑', label: 'North Key', x: CX + CORRIDOR_W + (W - CX - CORRIDOR_W) / 2 + 60, y: CY / 2 + 60, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'north' },
-
+            { id: 'note_2', icon: '📄', label: 'Note #2', x: 1723, y: 298, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #2', noteContent: '6' },
+            { id: 'key_north', icon: '🔑', label: 'North Key', x: 1797, y: 372, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'north' },
             // SW room
-            { id: 'note_3', icon: '📄', label: 'Note #3', x: CX / 2 - 14, y: CY + CORRIDOR_H + (H - CY - CORRIDOR_H) / 2 - 14, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #3', noteContent: '5' },
-
+            { id: 'note_3', icon: '📄', label: 'Note #3', x: 448, y: 1273, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #3', noteContent: '5' },
             // SE room
-            { id: 'note_4', icon: '📄', label: 'Note #4', x: CX + CORRIDOR_W + (W - CX - CORRIDOR_W) / 2 - 14, y: CY + CORRIDOR_H + (H - CY - CORRIDOR_H) / 2 - 14, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #4', noteContent: '8' },
-
+            { id: 'note_4', icon: '📄', label: 'Note #4', x: 1723, y: 1273, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #4', noteContent: '8' },
             // Corridor center
-            { id: 'lockbox', icon: '📦', label: 'Lock Box', x: CX + CORRIDOR_W / 2 - 25, y: CY + CORRIDOR_H / 2 - 25, width: 50, height: 50, collected: false, isLockbox: true, unlocked: false },
+            { id: 'lockbox', icon: '📦', label: 'Lock Box', x: 1075, y: 775, width: 50, height: 50, collected: false, isLockbox: true, unlocked: false },
         ];
 
         // ── TEXTURED OBJECTS ──────────────────────────────────────────────────
-        // Static world objects that display an image texture.
-        // To add a texture later, set the `texture` field to a path or URL:
-        //   texture: 'myimage.png'   or   texture: 'https://example.com/img.jpg'
-        //
-        // Fields:
-        //   id            – unique string
-        //   x, y          – world position (top-left corner)
-        //   width, height – size in world pixels
-        //   texture       – image path/URL, or null to show placeholder
-        //   label         – shown in the interact prompt
-        //   solid         – true = player cannot walk through it
         const texturedObjects = [
             {
                 id: 'textured_obj_1',
-                x: CX + CORRIDOR_W / 2 + 300,
-                y: CY + CORRIDOR_H / 2 - 170,
-                width: 64,
-                height: 64,
+                x: 1400, y: 630,
+                width: 64, height: 64,
                 texture: null,   // ← PUT YOUR IMAGE PATH/URL HERE
                 label: 'Object',
                 solid: true,
             },
-
             {
                 id: 'textured_obj_2',
-                x: CX + CORRIDOR_W / 2 - 300,
-                y: CY + CORRIDOR_H / 2 + 120,
-                width: 80,
-                height: 40,
+                x: 800, y: 920,
+                width: 80, height: 40,
                 texture: null,   // ← PUT YOUR IMAGE PATH/URL HERE
                 label: 'Another Object',
                 solid: true,
             },
-
-            {
-
-            }
         ];
 
-        // Pre-load textures into Image objects so they are ready each frame.
-        // Call loadTextures() again if you update a texture at runtime.
         const _texCache = {};
         function loadTextures() {
             for (const obj of texturedObjects) {
@@ -689,17 +604,13 @@
         function drawTexturedObjects() {
             for (const obj of texturedObjects) {
                 const img = obj.texture ? _texCache[obj.texture] : null;
-
                 if (img && img.complete && img.naturalWidth > 0) {
-                    // Actual texture
                     ctx.drawImage(img, obj.x, obj.y, obj.width, obj.height);
                 } else {
-                    // Placeholder: dark box with dashed border and frame icon
                     ctx.fillStyle = '#2a2a3a';
                     ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
                     ctx.setLineDash([4, 4]);
-                    ctx.strokeStyle = '#6666aa';
-                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#6666aa'; ctx.lineWidth = 2;
                     ctx.strokeRect(obj.x + 1, obj.y + 1, obj.width - 2, obj.height - 2);
                     ctx.setLineDash([]);
                     ctx.font = (Math.min(obj.width, obj.height) * 0.45) + 'px serif';
@@ -708,28 +619,21 @@
                     ctx.fillText('\uD83D\uDDBC\uFE0F', obj.x + obj.width / 2, obj.y + obj.height / 2);
                     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
                 }
-
-                // Gold highlight when player is in range
                 const reach = 60;
                 const dx = (player.x + player.width / 2) - (obj.x + obj.width / 2);
                 const dy = (player.y + player.height / 2) - (obj.y + obj.height / 2);
                 if (Math.abs(dx) < reach && Math.abs(dy) < reach) {
-                    ctx.strokeStyle = 'rgba(255,215,0,0.7)';
-                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = 'rgba(255,215,0,0.7)'; ctx.lineWidth = 2;
                     ctx.setLineDash([]);
                     ctx.strokeRect(obj.x - 2, obj.y - 2, obj.width + 4, obj.height + 4);
                 }
             }
         }
 
-        // Returns collision walls for solid textured objects (fed into getWalls).
         function getTexturedObjectWalls() {
-            return texturedObjects
-                .filter(o => o.solid)
-                .map(o => ({ x: o.x, y: o.y, w: o.width, h: o.height }));
+            return texturedObjects.filter(o => o.solid).map(o => ({ x: o.x, y: o.y, w: o.width, h: o.height }));
         }
 
-        // Returns the nearest textured object within interact range, or null.
         function getNearTexturedObject() {
             const reach = 60;
             for (const obj of texturedObjects) {
@@ -751,7 +655,8 @@
             const dropped = {
                 id: slot.id + '_drop_' + (dropIdCounter++), baseId: slot.id,
                 icon: slot.icon, label: slot.label,
-                x: player.x + player.width / 2 - itemW / 2, y: player.y + player.height / 2 - itemH / 2,
+                x: player.x + player.width / 2 - itemW / 2,
+                y: player.y + player.height / 2 - itemH / 2,
                 width: itemW, height: itemH, collected: false, isDropped: true,
                 isNote: slot.isNote || false, noteTitle: slot.noteTitle, noteContent: slot.noteContent,
                 isLockbox: slot.isLockbox || false, unlocked: slot.unlocked || false,
@@ -761,40 +666,26 @@
             if (slot.count > 1) { slot.count--; } else { inventory[activeSlot] = null; }
             renderInventory(); saveInventory();
             feedbacks.push({ text: `- ${slot.label}`, x: player.x + 16, y: player.y - 10, alpha: 1.0, vy: -0.5, color: '#ff8888' });
-
-            
         }
 
         // ── PLAYER SPAWN ──────────────────────────────────────────────────────
-        // When returning from a level exit, spawn the player just inside the door
-        // they came through. The exit door ID is stored in sessionStorage by fadeToLevel().
-        //
-        // "entry door" = the door this level was entered through (i.e. the one the
-        //  player came back from in the other level). We spawn next to it so they
-        //  appear right where they would have walked out.
-        //
-        // Spawn offset map:
-        //   north exit → spawn near top of vertical corridor arm
-        //   south exit → spawn near bottom of vertical corridor arm
-        //   west exit  → spawn near left of horizontal corridor arm
-        //   east exit  → spawn near right of horizontal corridor arm
+        // Spawn position based on which exit door the player arrived through.
+        // All positions in raw pixels (60px margin inside each door).
         function getSpawnPosition() {
-            const MARGIN = 60; // px inside the door
             try {
                 const from = sessionStorage.getItem('looping_rooms_entry_door');
-                if (from === 'north') return { x: CX + CORRIDOR_W / 2 - 16, y: MARGIN };
-                if (from === 'south') return { x: CX + CORRIDOR_W / 2 - 16, y: H - MARGIN - 32 };
-                if (from === 'west') return { x: MARGIN, y: CY + CORRIDOR_H / 2 - 16 };
-                if (from === 'east') return { x: W - MARGIN - 32, y: CY + CORRIDOR_H / 2 - 16 };
+                if (from === 'north') return { x: 1084, y: 60 };
+                if (from === 'south') return { x: 1084, y: 1508 };
+                if (from === 'west') return { x: 60, y: 784 };
+                if (from === 'east') return { x: 2108, y: 784 };
             } catch (e) { }
             // Default: corridor center
-            return { x: CX + CORRIDOR_W / 2 - 16, y: CY + CORRIDOR_H / 2 - 16 };
+            return { x: 1084, y: 784 };
         }
 
         const _spawn = getSpawnPosition();
         const player = {
-            x: _spawn.x,
-            y: _spawn.y,
+            x: _spawn.x, y: _spawn.y,
             width: 32, height: 32,
             velocityX: 0, velocityY: 0,
             speed: 2.8,
@@ -818,25 +709,25 @@
         function updateRoomTracking() {
             const nowIn = getPlayerRoom();
             if (nowIn === playerInRoom) return;
-
             if (playerInRoom !== null) {
                 const door = ROOM_DOORS.find(d => d.roomId === playerInRoom);
-                if (door) { door.isOpen = false; }
+                if (door) door.isOpen = false;
                 roomVisible[playerInRoom] = false;
             }
             if (nowIn !== null) {
                 roomVisible[nowIn] = true;
                 const door = ROOM_DOORS.find(d => d.roomId === nowIn);
-                if (door) { door.isOpen = true; }
+                if (door) door.isOpen = true;
             }
             playerInRoom = nowIn;
         }
 
-        // ── NOTES / LOCKBOX MODAL ─────────────────────────────────────────────
+        // ── NOTE / LOCKBOX MODALS ─────────────────────────────────────────────
         const noteModal = document.getElementById('note-modal');
         const noteTitleEl = document.getElementById('note-title');
         const noteContentEl = document.getElementById('note-content');
         let noteOpen = false;
+
         function openNote(item) {
             noteTitleEl.textContent = item.noteTitle;
             noteContentEl.textContent = item.noteContent;
@@ -852,6 +743,7 @@
 
         const lockboxModal = document.getElementById('lockbox-modal');
         let lockboxOpen = false, currentLockbox = null;
+
         function openLockbox(item) {
             currentLockbox = item;
             lbDigits.fill(0); lbNumEls.forEach(el => el.textContent = '0');
@@ -871,24 +763,18 @@
         const fadeOverlay = document.getElementById('fade-overlay');
         let isTransitioning = false;
 
-        // exitDoorId: the door the player is leaving through ("north"/"south"/"east"/"west").
-        // This is stored in sessionStorage so that when the destination level loads and
-        // the player returns, we know which door they came back from.
         function fadeToLevel(url, exitDoorId) {
             if (isTransitioning) return;
-            saveInventory();
-            saveWorldItemState();
-            // Write a token so other pages know a transition is in progress.
-            // This replaces the unreliable unload-based cleanup.
+            saveInventory(); saveWorldItemState();
             try {
                 sessionStorage.setItem('looping_rooms_in_transition', '1');
-                if (exitDoorId)
-                    sessionStorage.setItem('looping_rooms_entry_door', exitDoorId);
+                if (exitDoorId) sessionStorage.setItem('looping_rooms_entry_door', exitDoorId);
             } catch (e) { }
             isTransitioning = true;
             fadeOverlay.classList.add('fading');
             setTimeout(() => { window.location.href = url; }, 2000);
         }
+
         // ── INPUT ─────────────────────────────────────────────────────────────
         const keys = {};
         document.addEventListener('keydown', e => {
@@ -902,10 +788,7 @@
             if (e.code === 'KeyE') tryInteract();
             if (e.code === 'KeyG') dropActiveItem();
         });
-
-
         document.addEventListener('keyup', e => keys[e.code] = false);
-
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -955,12 +838,14 @@
         // ── INTERACT ──────────────────────────────────────────────────────────
         const doorMsgEl = document.getElementById('door-msg');
         let doorMsgTimer = null;
+
         function showDoorMsg(text) {
             doorMsgEl.textContent = text;
             doorMsgEl.classList.add('visible');
             clearTimeout(doorMsgTimer);
             doorMsgTimer = setTimeout(() => doorMsgEl.classList.remove('visible'), 2200);
         }
+
         function hasItem(id) {
             return inventory.some(s => s && (s.id === id || s.baseId === id));
         }
@@ -972,30 +857,25 @@
                 if (hasItem(keyId)) {
                     fadeToLevel(`level_${nearExit.id}.html`, nearExit.id);
                 } else {
-                    showDoorMsg(` Need the ${nearExit.id.charAt(0).toUpperCase() + nearExit.id.slice(1)} Key`);
+                    showDoorMsg(`Need the ${nearExit.id.charAt(0).toUpperCase() + nearExit.id.slice(1)} Key`);
                 }
                 return;
             }
-
             const nearRoom = getNearRoomDoor();
             if (nearRoom) {
-                if (!nearRoom.isOpen) {
-                    nearRoom.isOpen = true;
-                }
+                if (!nearRoom.isOpen) nearRoom.isOpen = true;
                 return;
             }
-
             const item = getNearbyItem();
             if (!item) return;
             if (item.isNote) { openNote(item); return; }
             if (item.isLockbox) { openLockbox(item); return; }
-
             const stackId = item.baseId || item.id;
             const invItem = { ...item, id: stackId };
             const added = addToInventory(invItem);
             if (added) {
                 item.collected = true;
-                saveWorldItemState(); // persist that this item was picked up
+                saveWorldItemState();
                 feedbacks.push({ text: `+ ${item.label}`, x: player.x + 16, y: player.y - 10, alpha: 1.0, vy: -0.5, color: '#ffd700' });
             }
         }
@@ -1009,14 +889,9 @@
             const px = player.x, py = player.y, pw = player.width, ph = player.height;
             const { x: wx, y: wy, w: ww, h: wh } = wall;
             if (!rectOverlap(px, py, pw, ph, wx, wy, ww, wh)) return;
-
-            const overlapL = (px + pw) - wx;
-            const overlapR = (wx + ww) - px;
-            const overlapT = (py + ph) - wy;
-            const overlapB = (wy + wh) - py;
-            const minX = Math.min(overlapL, overlapR);
-            const minY = Math.min(overlapT, overlapB);
-
+            const overlapL = (px + pw) - wx, overlapR = (wx + ww) - px;
+            const overlapT = (py + ph) - wy, overlapB = (wy + wh) - py;
+            const minX = Math.min(overlapL, overlapR), minY = Math.min(overlapT, overlapB);
             if (minX < minY) {
                 player.x += (overlapL < overlapR) ? -overlapL : overlapR;
             } else {
@@ -1026,81 +901,77 @@
 
         function getWalls() {
             const walls = [];
-            const T = 12;
-
             function wall(x, y, w, h) { walls.push({ x, y, w, h }); }
 
-            wall(0, CY - T, CX - T, T);
-            wall(0, CY + CORRIDOR_H, CX - T, T);
-            wall(CX + CORRIDOR_W + T, CY - T, W - CX - CORRIDOR_W - T, T);
-            wall(CX + CORRIDOR_W + T, CY + CORRIDOR_H, W - CX - CORRIDOR_W - T, T);
+            // ── Corridor horizontal arm top/bottom edges ──────────────────────
+            wall(0, 613, 913, 12);   // top of left arm
+            wall(0, 975, 913, 12);   // bottom of left arm
+            wall(1287, 613, 913, 12);   // top of right arm
+            wall(1287, 975, 913, 12);   // bottom of right arm
 
-            wall(CX, -T, CORRIDOR_W, T);
-            wall(CX, H, CORRIDOR_W, T);
+            // ── Corridor vertical arm top/bottom ──────────────────────────────
+            wall(925, -12, 350, 12);   // top of top arm
+            wall(925, 1600, 350, 12);   // bottom of bottom arm
 
-            wall(-T, CY, T, CORRIDOR_H);
-            wall(W, CY, T, CORRIDOR_H);
+            // ── Corridor horizontal arm left/right edges ──────────────────────
+            wall(-12, 625, 12, 350);  // left of left arm
+            wall(2200, 625, 12, 350);  // right of right arm
 
-            wall(0, 0, CX, T);
-            wall(-T, 0, T, CY);
-            wall(0, CY - T, CX, T);
+            // ── NW room outer walls ───────────────────────────────────────────
+            wall(0, 0, 925, 12);   // NW top
+            wall(-12, 0, 12, 625);  // NW left
+            wall(0, 613, 925, 12);   // NW bottom
 
-            wall(CX + CORRIDOR_W, 0, W - CX - CORRIDOR_W, T);
-            wall(W, 0, T, CY);
-            wall(CX + CORRIDOR_W, CY - T, W - CX - CORRIDOR_W, T);
+            // ── NE room outer walls ───────────────────────────────────────────
+            wall(1275, 0, 925, 12);   // NE top
+            wall(2200, 0, 12, 625);  // NE right
+            wall(1275, 613, 925, 12);   // NE bottom
 
-            wall(0, CY + CORRIDOR_H, CX, T);
-            wall(-T, CY + CORRIDOR_H, T, H - CY - CORRIDOR_H);
-            wall(0, H - T, CX, T);
+            // ── SW room outer walls ───────────────────────────────────────────
+            wall(0, 975, 925, 12);   // SW top
+            wall(-12, 975, 12, 625);  // SW left
+            wall(0, 1588, 925, 12);   // SW bottom
 
-            wall(CX + CORRIDOR_W, CY + CORRIDOR_H, W - CX - CORRIDOR_W, T);
-            wall(W, CY + CORRIDOR_H, T, H - CY - CORRIDOR_H);
-            wall(CX + CORRIDOR_W, H - T, W - CX - CORRIDOR_W, T);
+            // ── SE room outer walls ───────────────────────────────────────────
+            wall(1275, 975, 925, 12);   // SE top
+            wall(2200, 975, 12, 625);  // SE right
+            wall(1275, 1588, 925, 12);   // SE bottom
 
+            // ── Room divider walls with animated door gaps ────────────────────
+            // Left wall (x=925): NW room (y=0..625) and SW room (y=975..1600)
+            // Right wall (x=1263): NE room (y=0..625) and SE room (y=975..1600)
             function addDoorWall(door, wallX, wallY, wallH) {
                 const anim = door ? door.openAnim : 0;
                 if (anim >= 1) return;
-
-                const dY = door.y;
-                const dH = door.h;
-                const gap = dH * anim;
-                const halfGap = gap / 2;
-                const mid = dY + dH / 2;
-                const panelH = dH / 2 - halfGap;
-
-                if (dY > wallY) wall(wallX, wallY, T, dY - wallY);
-                if (dY + dH < wallY + wallH) wall(wallX, dY + dH, T, (wallY + wallH) - (dY + dH));
+                const dY = door.y, dH = door.h;
+                const gap = dH * anim, halfGap = gap / 2;
+                const mid = dY + dH / 2, panelH = dH / 2 - halfGap;
+                if (dY > wallY) wall(wallX, wallY, 12, dY - wallY);
+                if (dY + dH < wallY + wallH) wall(wallX, dY + dH, 12, (wallY + wallH) - (dY + dH));
                 if (panelH > 0.5) {
-                    wall(wallX, dY, T, panelH);
-                    wall(wallX, mid + halfGap, T, panelH);
+                    wall(wallX, dY, 12, panelH);
+                    wall(wallX, mid + halfGap, 12, panelH);
                 }
             }
 
-            const RX = CX + CORRIDOR_W - T;
-            addDoorWall(ROOM_DOORS.find(d => d.roomId === 'NW'), CX, 0, CY);
-            addDoorWall(ROOM_DOORS.find(d => d.roomId === 'SW'), CX, CY + CORRIDOR_H, H - CY - CORRIDOR_H);
-            addDoorWall(ROOM_DOORS.find(d => d.roomId === 'NE'), RX, 0, CY);
-            addDoorWall(ROOM_DOORS.find(d => d.roomId === 'SE'), RX, CY + CORRIDOR_H, H - CY - CORRIDOR_H);
+            addDoorWall(ROOM_DOORS.find(d => d.roomId === 'NW'), 925, 0, 625);
+            addDoorWall(ROOM_DOORS.find(d => d.roomId === 'SW'), 925, 975, 625);
+            addDoorWall(ROOM_DOORS.find(d => d.roomId === 'NE'), 1263, 0, 625);
+            addDoorWall(ROOM_DOORS.find(d => d.roomId === 'SE'), 1263, 975, 625);
 
-            // Add solid textured objects as collision walls
+            // Add solid textured objects
             for (const w of getTexturedObjectWalls()) walls.push(w);
 
             return walls;
         }
 
         function clampPlayerToWorld() {
-            player.x = Math.max(0, Math.min(W - player.width, player.x));
-            player.y = Math.max(0, Math.min(H - player.height, player.y));
-
+            player.x = Math.max(0, Math.min(2168, player.x));  // 2200 - 32
+            player.y = Math.max(0, Math.min(1568, player.y));  // 1600 - 32
             const walls = getWalls();
-            for (let i = 0; i < 2; i++) {
-                for (const wall of walls) {
-                    resolveAABB(wall);
-                }
-            }
-
-            player.x = Math.max(0, Math.min(W - player.width, player.x));
-            player.y = Math.max(0, Math.min(H - player.height, player.y));
+            for (let i = 0; i < 2; i++) for (const wall of walls) resolveAABB(wall);
+            player.x = Math.max(0, Math.min(2168, player.x));
+            player.y = Math.max(0, Math.min(1568, player.y));
         }
 
         // ── PLAYER UPDATE ─────────────────────────────────────────────────────
@@ -1111,8 +982,9 @@
             if (keys['KeyD'] || keys['ArrowRight']) player.velocityX = player.speed;
             if (keys['KeyW'] || keys['ArrowUp']) player.velocityY = -player.speed;
             if (keys['KeyS'] || keys['ArrowDown']) player.velocityY = player.speed;
-            if (player.velocityX && player.velocityY) { player.velocityX *= 0.707; player.velocityY *= 0.707; }
-
+            if (player.velocityX && player.velocityY) {
+                player.velocityX *= 0.707; player.velocityY *= 0.707;
+            }
             player.x += player.velocityX;
             player.y += player.velocityY;
             clampPlayerToWorld();
@@ -1122,23 +994,18 @@
             const lerp = 0.08;
             camera.x += (player.x + player.width / 2 - camera.x) * lerp;
             camera.y += (player.y + player.height / 2 - camera.y) * lerp;
-
             const INV_OFFSET = 76;
             const halfW = (canvas.width / 2) / camera.zoom;
             const halfH = (canvas.height / 2 - INV_OFFSET / 2) / camera.zoom;
-
-            camera.x = Math.max(halfW, Math.min(W - halfW, camera.x));
-            camera.y = Math.max(halfH, Math.min(H - halfH, camera.y));
+            camera.x = Math.max(halfW, Math.min(2200 - halfW, camera.x));
+            camera.y = Math.max(halfH, Math.min(1600 - halfH, camera.y));
         }
 
         // ── DOOR ANIMATION ────────────────────────────────────────────────────
         function updateDoorAnims() {
             for (let d of ROOM_DOORS) {
-                if (d.isOpen && d.openAnim < 1) {
-                    d.openAnim = Math.min(1, d.openAnim + 0.03);
-                } else if (!d.isOpen && d.openAnim > 0) {
-                    d.openAnim = Math.max(0, d.openAnim - 0.03);
-                }
+                if (d.isOpen && d.openAnim < 1) d.openAnim = Math.min(1, d.openAnim + 0.03);
+                if (!d.isOpen && d.openAnim > 0) d.openAnim = Math.max(0, d.openAnim - 0.03);
             }
         }
 
@@ -1146,32 +1013,30 @@
         function drawEnvironment() {
             const tileSize = 48;
 
-            const horizZone = { x: 0, y: CY, w: W, h: CORRIDOR_H };
-            const vertZone = { x: CX, y: 0, w: CORRIDOR_W, h: H };
-
-            function drawTiledZone(zone) {
-                const startX = Math.floor(zone.x / tileSize) * tileSize;
-                const startY = Math.floor(zone.y / tileSize) * tileSize;
-                for (let tx = startX; tx < zone.x + zone.w; tx += tileSize) {
-                    for (let ty = startY; ty < zone.y + zone.h; ty += tileSize) {
+            // Corridor tiles
+            function drawTiledZone(zx, zy, zw, zh) {
+                const startX = Math.floor(zx / tileSize) * tileSize;
+                const startY = Math.floor(zy / tileSize) * tileSize;
+                for (let tx = startX; tx < zx + zw; tx += tileSize) {
+                    for (let ty = startY; ty < zy + zh; ty += tileSize) {
                         const alt = ((Math.floor(tx / tileSize) + Math.floor(ty / tileSize)) % 2 === 0);
                         ctx.fillStyle = alt ? '#1a2230' : '#1e2838';
                         ctx.fillRect(tx, ty, tileSize, tileSize);
                     }
                 }
             }
-
-            drawTiledZone(horizZone);
-            drawTiledZone(vertZone);
+            // Horizontal corridor: x=0..2200, y=625..975
+            drawTiledZone(0, 625, 2200, 350);
+            // Vertical corridor:   x=925..1275, y=0..1600
+            drawTiledZone(925, 0, 350, 1600);
 
             ctx.strokeStyle = '#2a3a50'; ctx.lineWidth = 2;
-            ctx.strokeRect(0, CY, W, CORRIDOR_H);
-            ctx.strokeRect(CX, 0, CORRIDOR_W, H);
+            ctx.strokeRect(0, 625, 2200, 350);  // horizontal corridor border
+            ctx.strokeRect(925, 0, 350, 1600);  // vertical corridor border
 
+            // Draw 4 rooms
             for (const [id, room] of Object.entries(ROOMS)) {
-                const door = ROOM_DOORS.find(d => d.roomId === id);
                 const revealed = roomVisible[id];
-
                 if (revealed) {
                     ctx.fillStyle = '#2a1e10';
                     ctx.fillRect(room.x, room.y, room.w, room.h);
@@ -1211,90 +1076,70 @@
                 }
             }
 
+            // Draw room doors (purple, animated)
             for (let d of ROOM_DOORS) {
                 const anim = d.openAnim;
-                const cx = d.x + d.w / 2;
-                const cy = d.y + d.h / 2;
-
+                const cx = d.x + d.w / 2, cy = d.y + d.h / 2;
                 if (anim < 1) {
-                    const openFrac = anim;
-
-                    if (d.side === 'east' || d.side === 'west') {
-                        const halfH = (d.h / 2) * (1 - openFrac);
-                        ctx.shadowColor = '#9955ff';
-                        ctx.shadowBlur = 16 * (1 - openFrac);
-                        ctx.fillStyle = `rgba(140,60,220,${0.9 - openFrac * 0.8})`;
-                        ctx.fillRect(d.x, cy - halfH, d.w, halfH);
-                        ctx.fillStyle = `rgba(140,60,220,${0.9 - openFrac * 0.8})`;
-                        ctx.fillRect(d.x, cy, d.w, halfH);
-                        ctx.strokeStyle = `rgba(200,120,255,${1 - openFrac})`;
-                        ctx.lineWidth = 2;
-                        ctx.shadowBlur = 0;
-                        ctx.strokeRect(d.x, cy - halfH, d.w, halfH * 2);
-                        if (openFrac < 0.3) {
-                            ctx.fillStyle = `rgba(255,220,80,${1 - openFrac * 3})`;
-                            ctx.beginPath();
-                            ctx.arc(cx, cy, 5, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-                        ctx.shadowBlur = 0;
+                    const halfH = (d.h / 2) * (1 - anim);
+                    ctx.shadowColor = '#9955ff'; ctx.shadowBlur = 16 * (1 - anim);
+                    ctx.fillStyle = `rgba(140,60,220,${0.9 - anim * 0.8})`;
+                    ctx.fillRect(d.x, cy - halfH, d.w, halfH);
+                    ctx.fillRect(d.x, cy, d.w, halfH);
+                    ctx.strokeStyle = `rgba(200,120,255,${1 - anim})`; ctx.lineWidth = 2;
+                    ctx.shadowBlur = 0;
+                    ctx.strokeRect(d.x, cy - halfH, d.w, halfH * 2);
+                    if (anim < 0.3) {
+                        ctx.fillStyle = `rgba(255,220,80,${1 - anim * 3})`;
+                        ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
                     }
+                    ctx.shadowBlur = 0;
                 }
-
                 if (anim < 0.95) {
-                    ctx.strokeStyle = `rgba(180,80,255,${0.6 * (1 - anim)})`;
-                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = `rgba(180,80,255,${0.6 * (1 - anim)})`; ctx.lineWidth = 2;
                     ctx.strokeRect(d.x - 1, d.y, d.w + 2, d.h);
                 }
             }
 
+            // Draw exit doors
             exitDoors.forEach(d => {
                 const hasKey = inventory.some(s => s && (s.id === 'key_' + d.id || s.baseId === 'key_' + d.id));
                 const col = hasKey ? '#1a2e1a' : '#2e1a1a';
                 const stroke = hasKey ? '#44cc55' : '#cc4444';
                 const glow = hasKey ? '#44ff66' : '#ff4444';
                 const cx = d.x + d.w / 2, cy = d.y + d.h / 2;
-
-                ctx.fillStyle = col;
-                ctx.fillRect(d.x, d.y, d.w, d.h);
+                ctx.fillStyle = col; ctx.fillRect(d.x, d.y, d.w, d.h);
                 ctx.shadowColor = glow; ctx.shadowBlur = 14;
                 ctx.strokeStyle = stroke; ctx.lineWidth = 3;
                 ctx.strokeRect(d.x, d.y, d.w, d.h);
                 ctx.shadowBlur = 0;
-
                 ctx.font = 'bold 11px monospace';
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillStyle = hasKey ? '#aaffbb' : '#ffaaaa';
                 ctx.fillText(hasKey ? '🔓' : '🔒', cx, cy - 6);
                 ctx.font = 'bold 9px monospace';
-                ctx.fillStyle = hasKey ? '#aaffbb' : '#ffaaaa';
                 ctx.fillText(d.label, cx, cy + 7);
                 ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
             });
         }
 
         function drawPlayer() {
-            const cx = player.x + player.width / 2;
-            const cy = player.y + player.height / 2;
+            const cx = player.x + player.width / 2, cy = player.y + player.height / 2;
             ctx.fillStyle = '#e05555';
             ctx.beginPath(); ctx.arc(cx, cy, player.width / 2, 0, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = '#ff8888'; ctx.lineWidth = 2;
-            ctx.stroke();
+            ctx.strokeStyle = '#ff8888'; ctx.lineWidth = 2; ctx.stroke();
         }
 
         function drawSingleItem(item, bobY) {
-            const cx = item.x + item.width / 2;
-            const cy = bobY + item.height / 2;
+            const cx = item.x + item.width / 2, cy = bobY + item.height / 2;
             const gc = item.isLockbox ? (item.unlocked ? 'rgba(68,255,136,' : 'rgba(255,80,80,') : 'rgba(255,215,0,';
             const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 28);
             grad.addColorStop(0, gc + '0.35)'); grad.addColorStop(1, gc + '0)');
             ctx.fillStyle = grad;
             ctx.beginPath(); ctx.arc(cx, cy, 28, 0, Math.PI * 2); ctx.fill();
-
             if (item.isLockbox) {
                 ctx.fillStyle = item.unlocked ? '#1a3a2a' : '#2a1a1a';
-                ctx.strokeStyle = item.unlocked ? '#44ff88' : '#ff5050';
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = item.unlocked ? '#44ff88' : '#ff5050'; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.roundRect(item.x, bobY, item.width, item.height, 5); ctx.fill(); ctx.stroke();
                 ctx.font = '22px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText(item.unlocked ? '📭' : '🔒', cx, cy);
@@ -1353,6 +1198,7 @@
             const nearExit = getNearExitDoor();
             const nearRoomDoor = getNearRoomDoor();
             const nearItem = getNearbyItem();
+            const nearTex = getNearTexturedObject();
 
             if (nearExit) {
                 pickupPromptEl.textContent = `🚪 Press E to exit ${nearExit.id.toUpperCase()}`;
@@ -1366,8 +1212,8 @@
                         nearItem.isLockbox ? `Press E to open ${nearItem.label}` :
                             `Press E to pick up ${nearItem.label}`;
                 pickupPromptEl.classList.add('visible');
-            } else if (getNearTexturedObject()) {
-                pickupPromptEl.textContent = `Press E to inspect ${getNearTexturedObject().label}`;
+            } else if (nearTex) {
+                pickupPromptEl.textContent = `Press E to inspect ${nearTex.label}`;
                 pickupPromptEl.classList.add('visible');
             } else {
                 pickupPromptEl.classList.remove('visible');
@@ -1378,20 +1224,17 @@
 
             ctx.save();
             ctx.setTransform(camera.zoom, 0, 0, camera.zoom, tx, ty);
-
             drawEnvironment();
             drawWorldItems();
             drawTexturedObjects();
             drawPlayer();
             drawFeedbacks();
-
             ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.restore();
 
             requestAnimationFrame(gameLoop);
         }
 
-        // Load saved state then start
         loadInventory();
         loadWorldItemState();
         renderInventory();
