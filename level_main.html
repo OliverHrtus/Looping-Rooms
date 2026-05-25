@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,7 +25,8 @@
         }
         .inv-slot.active { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.5); }
         .inv-slot .slot-key { position: absolute; top: 3px; left: 5px; font-size: 10px; color: #888; font-family: monospace; }
-        .inv-slot .item-icon { font-size: 26px; user-select: none; }
+        .inv-slot .item-icon { font-size: 26px; user-select: none; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+        .inv-slot .item-icon img { width: 32px; height: 32px; object-fit: contain; }
         .inv-slot .item-count { position: absolute; bottom: 3px; right: 5px; font-size: 11px; color: #fff; font-family: monospace; font-weight: bold; }
 
         /* ── DIALOGUE PANEL ── */
@@ -56,10 +58,6 @@
             min-height: 52px;
             white-space: pre-wrap;
             letter-spacing: 0.03em;
-        }
-        #dialogue-text .asterisk {
-            color: #fff;
-            margin-right: 2px;
         }
         #dialogue-cursor {
             display: inline-block;
@@ -173,7 +171,6 @@
 <div id="door-msg"></div>
 <div id="fade-overlay"></div>
 
-<!-- ── DIALOGUE PANEL ─────────────────────────────────────────────── -->
 <div id="dialogue-panel">
     <div id="dialogue-text"></div>
     <div id="dialogue-hint">[ E / Z  to continue ]</div>
@@ -200,32 +197,17 @@
 </div>
 
 <script>
-// ════════════════════════════════════════════════════════════════════
-// DIALOGUE SYSTEM
-// ════════════════════════════════════════════════════════════════════
-// To add dialogue to any object or item, give it a `dialogue` property:
-//   dialogue: ['First line of text.', 'Second line.', 'Third line.']
-// Each string in the array is one "page" — player presses E/Z to advance.
-// The panel closes automatically after the last page.
-//
-// Example:
-//   { id: 'my_object', label: 'Old Chair', dialogue: [
-//       '* An old wooden chair.',
-//       '* It looks uncomfortable.',
-//   ], ... }
-// ════════════════════════════════════════════════════════════════════
-
 const dialoguePanel = document.getElementById('dialogue-panel');
 const dialogueText  = document.getElementById('dialogue-text');
 const dialogueHint  = document.getElementById('dialogue-hint');
 
 let dialogueOpen    = false;
-let dialoguePages   = [];   // array of strings
-let dialoguePage    = 0;    // current page index
+let dialoguePages   = [];   
+let dialoguePage    = 0;    
 let typewriterTimer = null;
 let typewriterDone  = false;
 let typewriterChars = 0;
-const TYPEWRITER_SPEED = 28; // ms per character
+const TYPEWRITER_SPEED = 28; 
 
 function openDialogue(pages) {
     if (!pages || pages.length === 0) return;
@@ -243,7 +225,6 @@ function showPage(idx) {
     typewriterDone  = false;
     clearInterval(typewriterTimer);
 
-    // Determine hint text
     const isLast = idx >= dialoguePages.length - 1;
     dialogueHint.textContent = isLast ? '[ E / Z  to close ]' : '[ E / Z  to continue ]';
 
@@ -253,7 +234,6 @@ function showPage(idx) {
         if (typewriterChars >= text.length) {
             clearInterval(typewriterTimer);
             typewriterDone = true;
-            // add blinking cursor after done
             const cursor = document.createElement('span');
             cursor.id = 'dialogue-cursor';
             dialogueText.appendChild(cursor);
@@ -263,7 +243,6 @@ function showPage(idx) {
 
 function advanceDialogue() {
     if (!dialogueOpen) return;
-    // If typewriter still running, snap to full text
     if (!typewriterDone) {
         clearInterval(typewriterTimer);
         typewriterDone = true;
@@ -273,7 +252,6 @@ function advanceDialogue() {
         dialogueText.appendChild(cursor);
         return;
     }
-    // Otherwise go to next page or close
     dialoguePage++;
     if (dialoguePage >= dialoguePages.length) {
         closeDialogue();
@@ -341,7 +319,7 @@ document.getElementById('lb-unlock-btn').addEventListener('click', () => {
         msg.textContent='✓ Unlocked!'; msg.className='lb-msg success';
         document.getElementById('lb-icon').textContent='📭';
         if (currentLockbox) currentLockbox.unlocked = true;
-        addToInventory({ id:'key_exit', icon:'🪪', label:'Exit Card', count:1 });
+        addToInventory({ id:'key_exit', icon:'🪪', texture:'assets/exit_card.png', label:'Exit Card', count:1 });
         setTimeout(closeLockbox, 1200);
     } else { msg.textContent='✗ Wrong code'; msg.className='lb-msg error'; }
 });
@@ -373,7 +351,19 @@ let activeItemLabelTimer=null;
 function renderInventory() {
     for (let i=0;i<INVENTORY_SIZE;i++) {
         document.getElementById(`slot-${i}`).classList.toggle('active',i===activeSlot);
-        document.getElementById(`icon-${i}`).textContent=inventory[i]?inventory[i].icon:'';
+        const iconSlot = document.getElementById(`icon-${i}`);
+        iconSlot.innerHTML = '';
+        
+        if(inventory[i]) {
+            const img = inventory[i].texture ? _texCache[inventory[i].texture] : null;
+            if(img && img.complete && img.naturalWidth > 0) {
+                const imgEl = document.createElement('img');
+                imgEl.src = inventory[i].texture;
+                iconSlot.appendChild(imgEl);
+            } else {
+                iconSlot.textContent = inventory[i].icon;
+            }
+        }
         document.getElementById(`count-${i}`).textContent=inventory[i]&&inventory[i].count>1?inventory[i].count:'';
     }
     const el=document.getElementById('active-item-label');
@@ -392,69 +382,16 @@ window.addEventListener('pagehide', () => {
 });
 
 function saveWorldItemState() {
-    try { const s={}; worldItems.forEach(i=>{if(i.collected)s[i.id]=true;}); sessionStorage.setItem('looping_rooms_world_items',JSON.stringify(s)); } catch(e){}
+    try { const s={}; texturedObjects.forEach(i=>{if(i.collected)s[i.id]=true;}); sessionStorage.setItem('looping_rooms_world_items',JSON.stringify(s)); } catch(e){}
 }
 function loadWorldItemState() {
-    try { const raw=sessionStorage.getItem('looping_rooms_world_items'); if(!raw)return; const s=JSON.parse(raw); worldItems.forEach(i=>{if(s[i.id])i.collected=true;}); } catch(e){}
+    try { const raw=sessionStorage.getItem('looping_rooms_world_items'); if(!raw)return; const s=JSON.parse(raw); texturedObjects.forEach(i=>{if(s[i.id])i.collected=true;}); } catch(e){}
 }
 
-// ── WORLD ITEMS ───────────────────────────────────────────────────────
-// Add `dialogue: ['line1','line2',...]` to any item or textured object
-// to show the panel when the player inspects it with E.
-const worldItems = [
-    // NW room
-    {
-        id:'note_1', icon:'📄', label:'Note #1', x:448, y:298, width:28, height:28,
-        collected:false, isNote:true, noteTitle:'Note #1', noteContent:'6',
-        dialogue:['* A crumpled piece of paper.', '* The number 6 is written on it.']
-    },
-    {
-        id:'key_west', icon:'🔑', label:'West Key', x:522, y:372, width:28, height:28,
-        collected:false, isDoorKey:true, doorId:'west',
-        dialogue:['* A small key.', '* It might open the door to the west.']
-    },
-    // NE room
-    {
-        id:'note_2', icon:'📄', label:'Note #2', x:1723, y:298, width:28, height:28,
-        collected:false, isNote:true, noteTitle:'Note #2', noteContent:'6',
-        dialogue:['* Another note.', '* The number 6 again...']
-    },
-    {
-        id:'key_north', icon:'🔑', label:'North Key', x:1797, y:372, width:28, height:28,
-        collected:false, isDoorKey:true, doorId:'north',
-        dialogue:['* A cold metal key.', '* For the north exit.']
-    },
-    // SW room
-    {
-        id:'note_3', icon:'📄', label:'Note #3', x:448, y:1273, width:28, height:28,
-        collected:false, isNote:true, noteTitle:'Note #3', noteContent:'5',
-        dialogue:['* A damp note.', '* The number 5 is barely readable.']
-    },
-    // SE room
-    {
-        id:'note_4', icon:'📄', label:'Note #4', x:1723, y:1273, width:28, height:28,
-        collected:false, isNote:true, noteTitle:'Note #4', noteContent:'8',
-        dialogue:['* The last note.', '* The number 8 stares back at you.']
-    },
-    // Corridor center
-    {
-        id:'lockbox', icon:'📦', label:'Lock Box', x:1075, y:775, width:50, height:50,
-        collected:false, isLockbox:true, unlocked:false,
-        dialogue:['* A heavy metal lockbox.', '* It has a 4-digit combination lock.', '* The digits must be entered in the right order...']
-    },
-];
-
 // ── TEXTURED / SCENERY OBJECTS ────────────────────────────────────────
-// Add `dialogue: ['...']` here to give inspect text to any placed object.
-// `solid: true` gives collision. Set texture to an image URL or null.
 const texturedObjects = [
     {
-        id:'textured_obj_1',
-        x:1400, y:630, width:64, height:64,
-        texture:null,
-        label:'Strange Machine',
-        solid:true,
-        // ← ADD YOUR INSPECT LINES HERE:
+        id:'textured_obj_1', x:1400, y:630, width:64, height:64, texture:'assets/machine.png', icon:'🤖', label:'Strange Machine', solid:true,
         dialogue:[
             '* A humming machine of unknown purpose.',
             '* Buttons line its face, none labelled.',
@@ -462,16 +399,51 @@ const texturedObjects = [
         ],
     },
     {
-        id:'textured_obj_2',
-        x:800, y:920, width:80, height:40,
-        texture:null,
-        label:'Old Rug',
-        solid:false,
-        // ← ADD YOUR INSPECT LINES HERE:
+        id:'textured_obj_2', x:800, y:920, width:80, height:40, texture:'assets/rug.png', icon:'🧶', label:'Old Rug', solid:false,
         dialogue:[
             '* An old rug, moth-eaten and dusty.',
             '* Nothing underneath but cold floor.',
         ],
+    },
+    // NW room items
+    {
+        id:'note_1', texture:'assets/note.png', icon:'📝', label:'Note #1', x:448, y:298, width:40, height:40,
+        collected:false, isNote:true, noteTitle:'Note #1', noteContent:'6', IsPuzzleItem:true,
+        dialogue:['* A crumpled piece of paper.', '* The number 6 is written on it.']
+    },
+    {
+        id:'key_west', texture:'assets/key.png', icon:'🔑', label:'West Key', x:522, y:372, width:35, height:35,
+        collected:false, isDoorKey:true, doorId:'west', IsPuzzleItem:true,
+        dialogue:['* A small key.', '* It might open the door to the west.']
+    },
+    // NE room items
+    {
+        id:'note_2', texture:'assets/note.png', icon:'📝', label:'Note #2', x:1723, y:298, width:40, height:40,
+        collected:false, isNote:true, noteTitle:'Note #2', noteContent:'6', IsPuzzleItem:true,
+        dialogue:['* Another note.', '* The number 6 again...']
+    },
+    {
+        id:'key_north', texture:'assets/key.png', icon:'🔑', label:'North Key', x:1797, y:372, width:28, height:28,
+        collected:false, isDoorKey:true, doorId:'north', IsPuzzleItem:true,
+        dialogue:['* A cold metal key.', '* For the north exit.']
+    },
+    // SW room item
+    {
+        id:'note_3', texture:'assets/note.png', icon:'📝', label:'Note #3', x:448, y:1273, width:40, height:40,
+        collected:false, isNote:true, noteTitle:'Note #3', noteContent:'5', IsPuzzleItem:true,
+        dialogue:['* A damp note.', '* The number 5 is barely readable.']
+    },
+    // SE room item
+    {
+        id:'note_4', texture:'assets/note.png', icon:'📝', label:'Note #4', x:1723, y:1273, width:40, height:40,
+        collected:false, isNote:true, noteTitle:'Note #4', noteContent:'8', IsPuzzleItem:true,
+        dialogue:['* The last note.', '* The number 8 stares back at you.']
+    },
+    // Corridor center item
+    {
+        id:'lockbox', texture:'assets/box.png', icon:'📦', label:'Lock Box', x:1075, y:775, width:50, height:50,
+        collected:false, isLockbox:true, unlocked:false, IsPuzzleItem:true,
+        dialogue:['* A heavy metal lockbox.', '* It has a 4-digit combination lock.', '* The digits must be entered in the right order...']
     },
 ];
 
@@ -485,38 +457,74 @@ function loadTextures() {
 }
 loadTextures();
 
-function drawTexturedObjects() {
-    for (const obj of texturedObjects) {
-        const img = obj.texture ? _texCache[obj.texture] : null;
-        if (img && img.complete && img.naturalWidth > 0) {
-            ctx.drawImage(img, obj.x, obj.y, obj.width, obj.height);
+function drawSingleItem(item, bobY){
+    const cx=item.x+item.width/2,cy=bobY+item.height/2;
+    const img = item.texture ? _texCache[item.texture] : null;
+
+    // Item Ambient Light Glow Ring
+    const gc=item.isLockbox?(item.unlocked?'rgba(68,255,136,':'rgba(255,80,80,'):'rgba(255,215,0,';
+    const grad=ctx.createRadialGradient(cx,cy,2,cx,cy,28);
+    grad.addColorStop(0,gc+'0.35)');grad.addColorStop(1,gc+'0)');
+    ctx.fillStyle=grad;ctx.beginPath();ctx.arc(cx,cy,28,0,Math.PI*2);ctx.fill();
+
+    if (img && img.complete && img.naturalWidth > 0) {
+        ctx.drawImage(img, item.x, bobY, item.width, item.height);
+    } else {
+        // Fallback placeholder rendering styles
+        if(item.isLockbox){
+            ctx.fillStyle=item.unlocked?'#1a3a2a':'#2a1a1a';ctx.strokeStyle=item.unlocked?'#44ff88':'#ff5050';ctx.lineWidth=2;
+            ctx.beginPath();ctx.roundRect(item.x,bobY,item.width,item.height,5);ctx.fill();ctx.stroke();
+            ctx.font='22px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(item.unlocked?'📭':'🔒',cx,cy);
         } else {
-            ctx.fillStyle = '#2a2a3a'; ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
-            ctx.setLineDash([4,4]); ctx.strokeStyle='#6666aa'; ctx.lineWidth=2;
-            ctx.strokeRect(obj.x+1, obj.y+1, obj.width-2, obj.height-2);
-            ctx.setLineDash([]);
-            ctx.font=(Math.min(obj.width,obj.height)*0.45)+'px serif';
-            ctx.textAlign='center'; ctx.textBaseline='middle';
-            ctx.fillStyle='rgba(180,180,220,0.5)';
-            ctx.fillText('\uD83D\uDDBC\uFE0F', obj.x+obj.width/2, obj.y+obj.height/2);
-            ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+            ctx.font=`${item.width}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(item.icon || '❓',cx,cy);
         }
-        // highlight near player
+    }
+    ctx.textAlign='left';ctx.textBaseline='alphabetic';
+}
+
+function drawTexturedObjects() {
+    const t = Date.now() / 600;
+    texturedObjects.forEach((obj, idx) => {
+        if (!obj.isNote && !obj.isLockbox && obj.collected) return;
+        
+        const inRoom = Object.entries(ROOMS).find(([id, r]) => obj.x + obj.width / 2 >= r.x && obj.x + obj.width / 2 <= r.x + r.w && obj.y + obj.height / 2 >= r.y && obj.y + obj.height / 2 <= r.y + r.h);
+        if (inRoom && !roomVisible[inRoom[0]]) return;
+
+        if (obj.IsPuzzleItem) {
+            drawSingleItem(obj, obj.y + Math.sin(t + idx * 1.3) * 4);
+        } else {
+            const img = obj.texture ? _texCache[obj.texture] : null;
+            if (img && img.complete && img.naturalWidth > 0) {
+                ctx.drawImage(img, obj.x, obj.y, obj.width, obj.height);
+            } else {
+                ctx.fillStyle = '#2a2a3a'; ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                ctx.setLineDash([4,4]); ctx.strokeStyle='#6666aa'; ctx.lineWidth=2;
+                ctx.strokeRect(obj.x+1, obj.y+1, obj.width-2, obj.height-2);
+                ctx.setLineDash([]);
+                ctx.font=(Math.min(obj.width,obj.height)*0.45)+'px serif';
+                ctx.textAlign='center'; ctx.textBaseline='middle';
+                ctx.fillStyle='rgba(180,180,220,0.5)';
+                ctx.fillText(obj.icon || '\uD83D\uDDBC\uFE0F', obj.x+obj.width/2, obj.y+obj.height/2);
+                ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+            }
+        }
+
         const dx=(player.x+player.width/2)-(obj.x+obj.width/2);
         const dy=(player.y+player.height/2)-(obj.y+obj.height/2);
         if (Math.abs(dx)<70&&Math.abs(dy)<70) {
             ctx.strokeStyle='rgba(255,215,0,0.7)'; ctx.lineWidth=2; ctx.setLineDash([]);
             ctx.strokeRect(obj.x-2,obj.y-2,obj.width+4,obj.height+4);
         }
-    }
+    });
 }
 
 function getTexturedObjectWalls() {
-    return texturedObjects.filter(o=>o.solid).map(o=>({x:o.x,y:o.y,w:o.width,h:o.height}));
+    return texturedObjects.filter(o=>o.solid && !o.collected).map(o=>({x:o.x,y:o.y,w:o.width,h:o.height}));
 }
 function getNearTexturedObject() {
     const reach=70;
     for (const obj of texturedObjects) {
+        if (!obj.isNote && !obj.isLockbox && obj.collected) continue;
         const dx=(player.x+player.width/2)-(obj.x+obj.width/2);
         const dy=(player.y+player.height/2)-(obj.y+obj.height/2);
         if (Math.abs(dx)<reach&&Math.abs(dy)<reach) return obj;
@@ -532,12 +540,12 @@ function dropActiveItem() {
     const itemW=slot.isLockbox?50:28, itemH=slot.isLockbox?50:28;
     const dropped={
         id:slot.id+'_drop_'+(dropIdCounter++), baseId:slot.id,
-        icon:slot.icon, label:slot.label,
+        icon:slot.icon, label:slot.label, texture:slot.texture,
         x:player.x+player.width/2-itemW/2, y:player.y+player.height/2-itemH/2,
         width:itemW, height:itemH, collected:false, isDropped:true,
         isNote:slot.isNote||false, noteTitle:slot.noteTitle, noteContent:slot.noteContent,
         isLockbox:slot.isLockbox||false, unlocked:slot.unlocked||false,
-        isDoorKey:slot.isDoorKey||false, doorId:slot.doorId,
+        isDoorKey:slot.isDoorKey||false, doorId:slot.doorId, IsPuzzleItem:true
     };
     droppedItems.push(dropped);
     if (slot.count>1) { slot.count--; } else { inventory[activeSlot]=null; }
@@ -596,7 +604,6 @@ function fadeToLevel(url,exitDoorId){
 
 const keys={};
 document.addEventListener('keydown',e=>{
-    // Dialogue advance takes priority
     if(dialogueOpen&&(e.code==='KeyE'||e.code==='KeyZ'||e.code==='Space')){
         e.preventDefault(); advanceDialogue(); return;
     }
@@ -614,10 +621,9 @@ window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.heig
 const pickupPromptEl=document.getElementById('pickup-prompt');
 const feedbacks=[];
 
-function getNearbyItem(){
+function getNearbyDroppedItem(){
     const reach=55;
     for(let item of droppedItems){if(item.collected)continue;const dx=(player.x+player.width/2)-(item.x+item.width/2),dy=(player.y+player.height/2)-(item.y+item.height/2);if(Math.abs(dx)<reach&&Math.abs(dy)<reach)return item;}
-    for(let item of worldItems){if(!item.isNote&&!item.isLockbox&&item.collected)continue;const dx=(player.x+player.width/2)-(item.x+item.width/2),dy=(player.y+player.height/2)-(item.y+item.height/2);if(Math.abs(dx)<reach&&Math.abs(dy)<reach)return item;}
     return null;
 }
 function getNearExitDoor(){const reach=70;for(let d of exitDoors){const dx=(player.x+player.width/2)-(d.x+d.w/2),dy=(player.y+player.height/2)-(d.y+d.h/2);if(Math.abs(dx)<reach&&Math.abs(dy)<reach)return d;}return null;}
@@ -641,45 +647,52 @@ function tryInteract(){
     const nearRoom=getNearRoomDoor();
     if(nearRoom){if(!nearRoom.isOpen)nearRoom.isOpen=true;return;}
 
-    // Check textured objects first (they can't be picked up)
+    const droppedItem = getNearbyDroppedItem();
+    if(droppedItem) {
+        const stackId=droppedItem.baseId||droppedItem.id;
+        if(addToInventory({...droppedItem,id:stackId})){
+            droppedItem.collected=true;
+            feedbacks.push({text:`+ ${droppedItem.label}`,x:player.x+16,y:player.y-10,alpha:1.0,vy:-0.5,color:'#ffd700'});
+        }
+        return;
+    }
+
     const nearTex=getNearTexturedObject();
     if(nearTex){
+        if(nearTex.isNote){
+            if(nearTex.dialogue&&nearTex.dialogue.length>0&&!dialogueOpen){
+                openDialogue(nearTex.dialogue);
+            } else {
+                openNote(nearTex);
+            }
+            return;
+        }
+        if(nearTex.isLockbox){
+            if(nearTex.dialogue&&nearTex.dialogue.length>0&&!dialogueOpen){
+                openDialogue(nearTex.dialogue);
+            } else {
+                openLockbox(nearTex);
+            }
+            return;
+        }
+        if(nearTex.IsPuzzleItem) {
+            if(nearTex.dialogue&&nearTex.dialogue.length>0&&!nearTex._dialogueSeen){
+                nearTex._dialogueSeen=true;
+                openDialogue(nearTex.dialogue);
+                return;
+            }
+            const stackId=nearTex.baseId||nearTex.id;
+            if(addToInventory({...nearTex,id:stackId})){
+                nearTex.collected=true;saveWorldItemState();
+                feedbacks.push({text:`+ ${nearTex.label}`,x:player.x+16,y:player.y-10,alpha:1.0,vy:-0.5,color:'#ffd700'});
+            }
+            return;
+        }
+        
         if(nearTex.dialogue&&nearTex.dialogue.length>0){
             openDialogue(nearTex.dialogue);
         }
         return;
-    }
-
-    const item=getNearbyItem();
-    if(!item) return;
-
-    // For notes: show dialogue first (if present), then open note modal on next E
-    if(item.isNote){
-        if(item.dialogue&&item.dialogue.length>0&&!dialogueOpen){
-            openDialogue(item.dialogue);
-        } else {
-            openNote(item);
-        }
-        return;
-    }
-    if(item.isLockbox){
-        if(item.dialogue&&item.dialogue.length>0&&!dialogueOpen){
-            openDialogue(item.dialogue);
-        } else {
-            openLockbox(item);
-        }
-        return;
-    }
-    // Collectible: show dialogue first if present, then auto-collect after
-    if(item.dialogue&&item.dialogue.length>0&&!item._dialogueSeen){
-        item._dialogueSeen=true;
-        openDialogue(item.dialogue);
-        return;
-    }
-    const stackId=item.baseId||item.id;
-    if(addToInventory({...item,id:stackId})){
-        item.collected=true;saveWorldItemState();
-        feedbacks.push({text:`+ ${item.label}`,x:player.x+16,y:player.y-10,alpha:1.0,vy:-0.5,color:'#ffd700'});
     }
 }
 
@@ -817,29 +830,8 @@ function drawPlayer(){
     ctx.fillStyle='#e05555';ctx.beginPath();ctx.arc(cx,cy,player.width/2,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle='#ff8888';ctx.lineWidth=2;ctx.stroke();
 }
-function drawSingleItem(item,bobY){
-    const cx=item.x+item.width/2,cy=bobY+item.height/2;
-    const gc=item.isLockbox?(item.unlocked?'rgba(68,255,136,':'rgba(255,80,80,'):'rgba(255,215,0,';
-    const grad=ctx.createRadialGradient(cx,cy,2,cx,cy,28);
-    grad.addColorStop(0,gc+'0.35)');grad.addColorStop(1,gc+'0)');
-    ctx.fillStyle=grad;ctx.beginPath();ctx.arc(cx,cy,28,0,Math.PI*2);ctx.fill();
-    if(item.isLockbox){
-        ctx.fillStyle=item.unlocked?'#1a3a2a':'#2a1a1a';ctx.strokeStyle=item.unlocked?'#44ff88':'#ff5050';ctx.lineWidth=2;
-        ctx.beginPath();ctx.roundRect(item.x,bobY,item.width,item.height,5);ctx.fill();ctx.stroke();
-        ctx.font='22px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(item.unlocked?'📭':'🔒',cx,cy);
-    } else {
-        ctx.font=`${item.width}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(item.icon,cx,cy);
-    }
-    ctx.textAlign='left';ctx.textBaseline='alphabetic';
-}
-function drawWorldItems(){
+function drawDroppedItems(){
     const t=Date.now()/600;
-    worldItems.forEach((item,idx)=>{
-        if(!item.isNote&&!item.isLockbox&&item.collected)return;
-        const inRoom=Object.entries(ROOMS).find(([id,r])=>item.x+item.width/2>=r.x&&item.x+item.width/2<=r.x+r.w&&item.y+item.height/2>=r.y&&item.y+item.height/2<=r.y+r.h);
-        if(inRoom&&!roomVisible[inRoom[0]])return;
-        drawSingleItem(item,item.y+Math.sin(t+idx*1.3)*4);
-    });
     droppedItems.forEach((item,idx)=>{
         if(item.collected)return;ctx.globalAlpha=0.88;
         drawSingleItem(item,item.y+Math.sin(t+idx*2.1+99)*3);ctx.globalAlpha=1;
@@ -861,16 +853,18 @@ function gameLoop(){
 
     const nearExit=getNearExitDoor();
     const nearRoomDoor=getNearRoomDoor();
-    const nearItem=getNearbyItem();
+    const nearDropped=getNearbyDroppedItem();
     const nearTex=getNearTexturedObject();
 
-    // Only show pickup prompt when dialogue is closed
     if(!dialogueOpen){
         if(nearExit){pickupPromptEl.textContent=`🚪 Press E to exit ${nearExit.id.toUpperCase()}`;pickupPromptEl.classList.add('visible');}
         else if(nearRoomDoor&&!nearRoomDoor.isOpen&&nearRoomDoor.openAnim===0){pickupPromptEl.textContent=`🚪 Press E to enter ${nearRoomDoor.roomId} Room`;pickupPromptEl.classList.add('visible');}
-        else if(nearTex){pickupPromptEl.textContent=`Press E to inspect ${nearTex.label}`;pickupPromptEl.classList.add('visible');}
-        else if(nearItem){
-            pickupPromptEl.textContent=nearItem.isNote?`Press E to read ${nearItem.label}`:nearItem.isLockbox?`Press E to open ${nearItem.label}`:`Press E to pick up ${nearItem.label}`;
+        else if(nearDropped){pickupPromptEl.textContent=`Press E to pick up ${nearDropped.label}`;pickupPromptEl.classList.add('visible');}
+        else if(nearTex){
+            if(nearTex.isNote) pickupPromptEl.textContent=`Press E to read ${nearTex.label}`;
+            else if(nearTex.isLockbox) pickupPromptEl.textContent=`Press E to open ${nearTex.label}`;
+            else if(nearTex.IsPuzzleItem) pickupPromptEl.textContent=`Press E to pick up ${nearTex.label}`;
+            else pickupPromptEl.textContent=`Press E to inspect ${nearTex.label}`;
             pickupPromptEl.classList.add('visible');
         } else {pickupPromptEl.classList.remove('visible');}
     } else {
@@ -880,7 +874,7 @@ function gameLoop(){
     const tx=canvas.width/2-camera.x*camera.zoom;
     const ty=canvas.height/2-camera.y*camera.zoom;
     ctx.save();ctx.setTransform(camera.zoom,0,0,camera.zoom,tx,ty);
-    drawEnvironment();drawWorldItems();drawTexturedObjects();drawPlayer();drawFeedbacks();
+    drawEnvironment();drawDroppedItems();drawTexturedObjects();drawPlayer();drawFeedbacks();
     ctx.setTransform(1,0,0,1,0,0);ctx.restore();
 
     requestAnimationFrame(gameLoop);
@@ -890,3 +884,5 @@ loadInventory();loadWorldItemState();renderInventory();gameLoop();
 </script>
 </body>
 </html>
+
+```
