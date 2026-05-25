@@ -529,22 +529,15 @@
         // Main:  right edge (x = 2180)
         const exitDoors = [
             
-            { id: 'main', side: 'right', x: 2180, y: 760, w: 20, h: 80, label: 'M' },
+            { id: 'west', side: 'right', x: 2180, y: 760, w: 20, h: 80, label: 'M' },
         ];
 
         // ── WORLD ITEMS (all positions hardcoded in pixels) ───────────────────
         // Corridor center: x≈1100, y≈800
         // Notes inside corridor (top-left area of corridor): x start at 1005, y at 705
         const worldItems = [
-            { id: 'note_1', icon: '📄', label: 'Note #1', x: 1005, y: 705, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #1', noteContent: '6' },
             { id: 'note_2', icon: '📄', label: 'Note #2', x: 1125, y: 705, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #2', noteContent: '6' },
-            { id: 'note_3', icon: '📄', label: 'Note #3', x: 1005, y: 845, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #3', noteContent: '5' },
-            { id: 'note_4', icon: '📄', label: 'Note #4', x: 1125, y: 845, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #4', noteContent: '8' },
-            // Lockbox at corridor center: x=1100-25=1075, y=800-25=775
-            { id: 'lockbox', icon: '📦', label: 'Lock Box', x: 1075, y: 775, width: 50, height: 50, collected: false, isLockbox: true, unlocked: false },
-            // Keys
-            { id: 'key_west', icon: '🔑', label: 'West Key', x: 1000, y: 500, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'west' },
-            { id: 'key_main', icon: '🔑', label: 'Main Key', x: 1255, y: 855, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'north' },
+            { id: 'key_north', icon: '🔑', label: 'West Key', x: 1000, y: 500, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'west' },
         ];
 
         const droppedItems = [];

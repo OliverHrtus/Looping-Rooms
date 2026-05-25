@@ -388,6 +388,7 @@ function loadWorldItemState() {
     try { const raw=sessionStorage.getItem('looping_rooms_world_items'); if(!raw)return; const s=JSON.parse(raw); texturedObjects.forEach(i=>{if(s[i.id])i.collected=true;}); } catch(e){}
 }
 
+<<<<<<< HEAD
 // ── TEXTURED / SCENERY OBJECTS ────────────────────────────────────────
 const texturedObjects = [
     {
@@ -446,6 +447,46 @@ const texturedObjects = [
         dialogue:['* A heavy metal lockbox.', '* It has a 4-digit combination lock.', '* The digits must be entered in the right order...']
     },
 ];
+=======
+        // ── WORLD ITEMS ───────────────────────────────────────────────────────
+        // All positions in raw pixels. Room centers:
+        //   NW center: (462, 312)   NE center: (1737, 312)
+        //   SW center: (462, 1287)  SE center: (1737, 1287)
+        const worldItems = [
+            // NW room
+            { id: 'note_1', icon: '📄', label: 'Note #1', x: 448, y: 298, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #1', noteContent: '6' },
+            { id: 'key_west', icon: '🔑', label: 'West Key', x: 522, y: 372, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'west' },
+            // NE room
+            { id: 'note_2', icon: '📄', label: 'Note #2', x: 1723, y: 298, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #2', noteContent: '6' },
+            { id: 'key_north', icon: '🔑', label: 'North Key', x: 1797, y: 372, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'north' },
+            // SW room
+            { id: 'note_3', icon: '📄', label: 'Note #3', x: 448, y: 1273, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #3', noteContent: '5' },
+            // SE room
+            { id: 'note_4', icon: '📄', label: 'Note #4', x: 1723, y: 1273, width: 28, height: 28, collected: false, isNote: true, noteTitle: 'Note #4', noteContent: '8' },
+            // Corridor center
+            { id: 'lockbox', icon: '📦', label: 'Lock Box', x: 1075, y: 775, width: 50, height: 50, collected: false, isLockbox: true, unlocked: false },
+        ];
+
+        // ── TEXTURED OBJECTS ──────────────────────────────────────────────────
+        const texturedObjects = [
+            {
+                id: 'textured_obj_1',
+                x: 1400, y: 630,
+                width: 64, height: 64,
+                texture: null,   // ← PUT YOUR IMAGE PATH/URL HERE
+                label: 'Object',
+                solid: true,
+            },
+            {
+                id: 'textured_obj_2',
+                x: 800, y: 920,
+                width: 80, height: 40,
+                texture: null,   // ← PUT YOUR IMAGE PATH/URL HERE
+                label: 'Another Object',
+                solid: true,
+            },
+        ];
+>>>>>>> 0ce25d5dbe11b56d7cb3a4c9272e3f60f0508ca1
 
 const _texCache = {};
 function loadTextures() {
