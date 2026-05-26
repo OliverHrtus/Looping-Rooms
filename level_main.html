@@ -552,19 +552,21 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        const ROOMS = {
-            NW: { x: 0, y: 0, w: 925, h: 625, id: 'NW' },
-            NE: { x: 1275, y: 0, w: 925, h: 625, id: 'NE' },
-            SW: { x: 0, y: 975, w: 925, h: 625, id: 'SW' },
-            SE: { x: 1275, y: 975, w: 925, h: 625, id: 'SE' },
-        };
+const ROOMS = {
+    NW: { x: 0,    y: 0,    w: 500, h: 625, id: 'NW' },
+    NE: { x: 1275, y: 0,    w: 925, h: 625, id: 'NE' },
+    SW: { x: 0,    y: 975,  w: 925, h: 625, id: 'SW' },
+    SE: { x: 1275, y: 975,  w: 925, h: 625, id: 'SE' },
+    BATHROOM: { x: 925,  y: 625,  w: 350, h: 350, id: 'BATHROOM' },
+};
 
-        const ROOM_DOORS = [
-            { id: 'door_NW', roomId: 'NW', x: 925, y: 277.5, w: 12, h: 70, side: 'east', openAnim: 0, isOpen: false },
-            { id: 'door_NE', roomId: 'NE', x: 1263, y: 277.5, w: 12, h: 70, side: 'west', openAnim: 0, isOpen: false },
-            { id: 'door_SW', roomId: 'SW', x: 925, y: 1252.5, w: 12, h: 70, side: 'east', openAnim: 0, isOpen: false },
-            { id: 'door_SE', roomId: 'SE', x: 1263, y: 1252.5, w: 12, h: 70, side: 'west', openAnim: 0, isOpen: false },
-        ];
+const ROOM_DOORS = [
+    { id: 'door_NW', roomId: 'NW', x: 925,  y: 277.5,  w: 12, h: 70, side: 'east', openAnim: 0, isOpen: false },
+    { id: 'door_NE', roomId: 'NE', x: 1263, y: 277.5,  w: 12, h: 70, side: 'west', openAnim: 0, isOpen: false },
+    { id: 'door_SW', roomId: 'SW', x: 925,  y: 1252.5, w: 12, h: 70, side: 'east', openAnim: 0, isOpen: false },
+    { id: 'door_SE', roomId: 'SE', x: 1263, y: 1252.5, w: 12, h: 70, side: 'west', openAnim: 0, isOpen: false },
+    
+];
 
         const exitDoors = [
             { id: 'north', x: 1060, y: 0, w: 80, h: 20, label: 'N' },
@@ -666,64 +668,66 @@
         }
 
 
-        // ── TEXTURED / SCENERY OBJECTS ────────────────────────────────────────
-        const texturedObjects = [
-            {
-                id: 'textured_obj_1', x: 1400, y: 630, width: 64, height: 64, texture: 'assets/machine.png', icon: '🤖', label: 'Strange Machine', solid: true,
-                dialogue: [
-                    '* A humming machine of unknown purpose.',
-                    '* Buttons line its face, none labelled.',
-                    '* You decide not to press anything.',
-                ],
-            },
-            {
-                id: 'textured_obj_2', x: 800, y: 920, width: 80, height: 40, texture: 'assets/rug.png', icon: '🧶', label: 'Old Rug', solid: false,
-                dialogue: [
-                    '* An old rug, moth-eaten and dusty.',
-                    '* Nothing underneath but cold floor.',
-                ],
-            },
-            // NW room items
-            {
-                id: 'note_1', texture: 'assets/note.png', icon: '📝', label: 'Note #1', x: 448, y: 298, width: 40, height: 40,
-                collected: false, isNote: true, noteTitle: 'Note #1', noteContent: '6', IsPuzzleItem: true,
-                dialogue: ['* A crumpled piece of paper.', '* The number 6 is written on it.']
-            },
-            {
-                id: 'key_west', texture: 'assets/key.png', icon: '🔑', label: 'West Key', x: 522, y: 372, width: 35, height: 35,
-                collected: false, isDoorKey: true, doorId: 'west', IsPuzzleItem: true,
-                dialogue: ['* A small key.', '* It might open the door to the west.']
-            },
-            // NE room items
-            {
-                id: 'note_2', texture: 'assets/note.png', icon: '📝', label: 'Note #2', x: 1723, y: 298, width: 40, height: 40,
-                collected: false, isNote: true, noteTitle: 'Note #2', noteContent: '6', IsPuzzleItem: true,
-                dialogue: ['* Another note.', '* The number 6 again...']
-            },
-            {
-                id: 'key_north', texture: 'assets/key.png', icon: '🔑', label: 'North Key', x: 1797, y: 372, width: 28, height: 28,
-                collected: false, isDoorKey: true, doorId: 'north', IsPuzzleItem: true,
-                dialogue: ['* A cold metal key.', '* For the north exit.']
-            },
-            // SW room item
-            {
-                id: 'note_3', texture: 'assets/note.png', icon: '📝', label: 'Note #3', x: 448, y: 1273, width: 40, height: 40,
-                collected: false, isNote: true, noteTitle: 'Note #3', noteContent: '5', IsPuzzleItem: true,
-                dialogue: ['* A damp note.', '* The number 5 is barely readable.']
-            },
-            // SE room item
-            {
-                id: 'note_4', texture: 'assets/note.png', icon: '📝', label: 'Note #4', x: 1723, y: 1273, width: 40, height: 40,
-                collected: false, isNote: true, noteTitle: 'Note #4', noteContent: '8', IsPuzzleItem: true,
-                dialogue: ['* The last note.', '* The number 8 stares back at you.']
-            },
-            // Corridor center item
-            {
-                id: 'lockbox', texture: 'assets/box.png', icon: '📦', label: 'Lock Box', x: 1075, y: 775, width: 50, height: 50,
-                collected: false, isLockbox: true, unlocked: false, IsPuzzleItem: true,
-                dialogue: ['* A heavy metal lockbox.', '* It has a 4-digit combination lock.', '* The digits must be entered in the right order...']
-            },
-        ];
+// ── TEXTURED / SCENERY OBJECTS ────────────────────────────────────────
+const texturedObjects = [
+    {
+        id:'textured_obj_1', x:1400, y:630, width:64, height:64, texture:'assets/machine.png', icon:'🤖', label:'Strange Machine', solid:true,
+        dialogue:[
+            '* A humming machine of unknown purpose.',
+            '* Buttons line its face, none labelled.',
+            '* You decide not to press anything.',
+        ],
+    },
+    {
+        id:'textured_obj_2', x:800, y:920, width:80, height:40, texture:'assets/rug.png', icon:'🧶', label:'Old Rug', solid:false,
+        dialogue:[
+            '* An old rug, moth-eaten and dusty.',
+            '* Nothing underneath but cold floor.',
+        ],
+
+        id:'textured_obj_3', x:1600, y:920, width:80, height:40, texture:'assets/rug.png', icon:'🧶', label:'Old Rug', solid:true,
+    },
+    // NW room items
+    {
+        id:'note_1', texture:'assets/note.png', icon:'📝', label:'Note #1', x:448, y:298, width:40, height:40,
+        collected:false, isNote:true, noteTitle:'Note #1', noteContent:'6', IsPuzzleItem:true,
+        dialogue:['* A crumpled piece of paper.', '* The number 6 is written on it.']
+    },
+    {
+        id:'key_west', texture:'assets/key.png', icon:'🔑', label:'West Key', x:522, y:372, width:35, height:35,
+        collected:false, isDoorKey:true, doorId:'west', IsPuzzleItem:true,
+        dialogue:['* A small key.', '* It might open the door to the west.']
+    },
+    // NE room items
+    {
+        id:'note_2', texture:'assets/note.png', icon:'📝', label:'Note #2', x:1723, y:298, width:40, height:40,
+        collected:false, isNote:true, noteTitle:'Note #2', noteContent:'6', IsPuzzleItem:true,
+        dialogue:['* Another note.', '* The number 6 again...']
+    },
+    {
+        id:'key_north', texture:'assets/key.png', icon:'🔑', label:'North Key', x:1797, y:372, width:28, height:28,
+        collected:false, isDoorKey:true, doorId:'north', IsPuzzleItem:true,
+        dialogue:['* A cold metal key.', '* For the north exit.']
+    },
+    // SW room item
+    {
+        id:'note_3', texture:'assets/note.png', icon:'📝', label:'Note #3', x:448, y:1273, width:40, height:40,
+        collected:false, isNote:true, noteTitle:'Note #3', noteContent:'5', IsPuzzleItem:true,
+        dialogue:['* A damp note.', '* The number 5 is barely readable.']
+    },
+    // SE room item
+    {
+        id:'note_4', texture:'assets/note.png', icon:'📝', label:'Note #4', x:1723, y:1273, width:40, height:40,
+        collected:false, isNote:true, noteTitle:'Note #4', noteContent:'8', IsPuzzleItem:true,
+        dialogue:['* The last note.', '* The number 8 stares back at you.']
+    },
+    // Corridor center item
+    {
+        id:'lockbox', texture:'assets/box.png', icon:'📦', label:'Lock Box', x:1075, y:775, width:50, height:50,
+        collected:false, isLockbox:true, unlocked:false, IsPuzzleItem:true,
+        dialogue:['* A heavy metal lockbox.', '* It has a 4-digit combination lock.', '* The digits must be entered in the right order...']
+    },
+];
 
 
         const _texCache = {};
