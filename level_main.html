@@ -843,7 +843,7 @@
             return { x: 1084, y: 784 };
         }
         const _spawn = getSpawnPosition();
-        const player = { x: _spawn.x, y: _spawn.y, width: 32, height: 32, velocityX: 0, velocityY: 0, speed: 2.8 };
+        const player = { x: _spawn.x, y: _spawn.y, width: 32, height: 32, velocityX: 0, velocityY: 0, speed: 5 };
         const camera = { x: player.x, y: player.y, zoom: 1.4 };
 
         const roomVisible = { NW: false, NE: false, SW: false, SE: false };
@@ -1024,11 +1024,12 @@
             if (keys['KeyW'] || keys['ArrowUp']) player.velocityY = -player.speed;
             if (keys['KeyS'] || keys['ArrowDown']) player.velocityY = player.speed;
             if (player.velocityX && player.velocityY) { player.velocityX *= 0.707; player.velocityY *= 0.707; }
-            player.x += player.velocityX; player.y += player.velocityY;
+            player.x += player.velocityX * deltaTime;
+            player.y += player.velocityY * deltaTime;
             clampPlayerToWorld();
         }
         function updateCamera() {
-            const lerp = 0.08;
+            const lerp = 0.2 * deltaTime;
             camera.x += (player.x + player.width / 2 - camera.x) * lerp;
             camera.y += (player.y + player.height / 2 - camera.y) * lerp;
             const INV_OFFSET = 76;
@@ -1038,8 +1039,8 @@
         }
         function updateDoorAnims() {
             for (let d of ROOM_DOORS) {
-                if (d.isOpen && d.openAnim < 1) d.openAnim = Math.min(1, d.openAnim + 0.03);
-                if (!d.isOpen && d.openAnim > 0) d.openAnim = Math.max(0, d.openAnim - 0.03);
+                if (d.isOpen && d.openAnim < 1) d.openAnim = Math.min(1, d.openAnim + 0.06 * deltaTime);
+                if (!d.isOpen && d.openAnim > 0) d.openAnim = Math.max(0, d.openAnim - 0.06 * deltaTime);
             }
         }
 
@@ -1121,14 +1122,30 @@
             for (let i = feedbacks.length - 1; i >= 0; i--) {
                 const f = feedbacks[i]; ctx.globalAlpha = f.alpha; ctx.fillStyle = f.color || '#ffd700';
                 ctx.font = 'bold 13px monospace'; ctx.fillText(f.text, f.x, f.y);
-                f.y += f.vy; f.alpha -= 0.012; if (f.alpha <= 0) feedbacks.splice(i, 1);
+                f.y += f.vy * deltaTime;
+                f.alpha -= 0.012 * deltaTime; if (f.alpha <= 0) feedbacks.splice(i, 1);
             }
             ctx.globalAlpha = 1; ctx.restore();
         }
 
-        function gameLoop() {
+        let lastTime = performance.now();
+        let deltaTime = 1;
+
+        function gameLoop(currentTime) {
+            // Time normalization
+            // 60fps = 1.0
+            deltaTime = (currentTime - lastTime) / (1000 / 60);
+            lastTime = currentTime;
+
+            // Prevent giant jumps when tabbing back in
+            deltaTime = Math.min(deltaTime, 3);
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            updatePlayer(); updateCamera(); updateDoorAnims(); updateRoomTracking();
+
+            updatePlayer();
+            updateCamera();
+            updateDoorAnims();
+            updateRoomTracking();
 
             const nearExit = getNearExitDoor();
             const nearRoomDoor = getNearRoomDoor();
@@ -1136,32 +1153,59 @@
             const nearTex = getNearTexturedObject();
 
             if (!dialogueOpen) {
-                if (nearExit) { pickupPromptEl.textContent = `🚪 Press E to exit ${nearExit.id.toUpperCase()}`; pickupPromptEl.classList.add('visible'); }
-                else if (nearRoomDoor && !nearRoomDoor.isOpen && nearRoomDoor.openAnim === 0) { pickupPromptEl.textContent = `🚪 Press E to enter ${nearRoomDoor.roomId} Room`; pickupPromptEl.classList.add('visible'); }
-                else if (nearDropped) { pickupPromptEl.textContent = `Press E to pick up ${nearDropped.label}`; pickupPromptEl.classList.add('visible'); }
-                else if (nearTex) {
-                    if (nearTex.isNote) pickupPromptEl.textContent = `Press E to read ${nearTex.label}`;
-                    else if (nearTex.isLockbox) pickupPromptEl.textContent = `Press E to open ${nearTex.label}`;
-                    else if (nearTex.IsPuzzleItem) pickupPromptEl.textContent = `Press E to pick up ${nearTex.label}`;
-                    else pickupPromptEl.textContent = `Press E to inspect ${nearTex.label}`;
+                if (nearExit) {
+                    pickupPromptEl.textContent = `🚪 Press E to exit ${nearExit.id.toUpperCase()}`;
                     pickupPromptEl.classList.add('visible');
-                } else { pickupPromptEl.classList.remove('visible'); }
-            } else {
+                }
+                else if (nearRoomDoor && !nearRoomDoor.isOpen && nearRoomDoor.openAnim === 0) {
+                    pickupPromptEl.textContent = `🚪 Press E to enter ${nearRoomDoor.roomId} Room`;
+                    pickupPromptEl.classList.add('visible');
+                }
+                else if (nearDropped) {
+                    pickupPromptEl.textContent = `Press E to pick up ${nearDropped.label}`;
+                    pickupPromptEl.classList.add('visible');
+                }
+                else if (nearTex) {
+                    if (nearTex.isNote)
+                        pickupPromptEl.textContent = `Press E to read ${nearTex.label}`;
+                    else if (nearTex.isLockbox)
+                        pickupPromptEl.textContent = `Press E to open ${nearTex.label}`;
+                    else if (nearTex.IsPuzzleItem)
+                        pickupPromptEl.textContent = `Press E to pick up ${nearTex.label}`;
+                    else
+                        pickupPromptEl.textContent = `Press E to inspect ${nearTex.label}`;
+
+                    pickupPromptEl.classList.add('visible');
+                }
+                else {
+                    pickupPromptEl.classList.remove('visible');
+                }
+            }
+            else {
                 pickupPromptEl.classList.remove('visible');
             }
 
             const tx = canvas.width / 2 - camera.x * camera.zoom;
             const ty = canvas.height / 2 - camera.y * camera.zoom;
-            ctx.save(); ctx.setTransform(camera.zoom, 0, 0, camera.zoom, tx, ty);
-            drawEnvironment(); drawDroppedItems(); drawTexturedObjects(); drawPlayer(); drawFeedbacks();
-            ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.restore();
+
+            ctx.save();
+            ctx.setTransform(camera.zoom, 0, 0, camera.zoom, tx, ty);
+
+            drawEnvironment();
+            drawDroppedItems();
+            drawTexturedObjects();
+            drawPlayer();
+            drawFeedbacks();
+
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.restore();
 
             requestAnimationFrame(gameLoop);
         }
 
-        loadInventory(); loadWorldItemState(); renderInventory(); gameLoop();
+        requestAnimationFrame(gameLoop);
+        loadInventory(); loadWorldItemState(); renderInventory(); 
     </script>
 </body>
 
 </html>
-
