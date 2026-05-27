@@ -490,44 +490,6 @@
     <script>
 
         // ════════════════════════════════════════════════════════════
-        // SPRITESHEET ANIMATION SYSTEM
-        // ════════════════════════════════════════════════════════════
-        function createAnim(texture, frameW, frameH, cols, fps) {
-            return {
-                texture,       // path to the spritesheet image
-                frameW,        // width of one frame in the sheet
-                frameH,        // height of one frame in the sheet
-                cols,          // how many columns (frames per row)
-                fps,           // playback speed in frames per second
-                frame: 0,      // current frame index
-                timer: 0       // accumulator in milliseconds
-            };
-        }
-
-        function updateAnim(anim) {
-            anim.timer += deltaTime * (1000 / 60); // convert to ms
-            const msPerFrame = 1000 / anim.fps;
-            if (anim.timer >= msPerFrame) {
-            anim.timer -= msPerFrame;
-            anim.frame++;
-            // loop back to start — change this to clamp if one-shot
-            if (anim.frame >= anim.cols) anim.frame = 0;
-        }
-    }
-
-        function drawAnim(anim, destX, destY, destW, destH) {
-        const img = _texCache[anim.texture];
-        if (!img || !img.complete || img.naturalWidth === 0) return;
-        const srcX = anim.frame * anim.frameW;
-        const srcY = 0; // change this if your sheet has multiple rows
-        ctx.drawImage(img, srcX, srcY, anim.frameW, anim.frameH,
-                       destX, destY, destW, destH);
-    }
-
-
-           
-        
-        // ════════════════════════════════════════════════════════════
         // DIALOGUE SYSTEM
         // ════════════════════════════════════════════════════════════
         const dialoguePanel = document.getElementById('dialogue-panel');
@@ -948,9 +910,9 @@
             {
                 id: 'textured_obj_21', 
                 x: 250,
-                y: 530,
+                y: 510,
                 width: 60,
-                height: 60,
+                height: 80,
                 solid: true,
                 texture: 'assets/mirror.png',
                 label: 'Mirror',
@@ -1008,21 +970,13 @@
             { id: 'lockbox', texture: 'assets/box.png', icon: '📦', label: 'Lock Box', x: 1075, y: 775, width: 50, height: 50, collected: false, isLockbox: true, unlocked: false, IsPuzzleItem: true, dialogue: ['* A heavy metal lockbox.', '* It has a 4-digit combination lock.', '* The digits must be entered in the right order...'] },
         ];
 
-        const _texCache = {};
-        function loadTextures() {
-    for (const obj of texturedObjects) {
-        if (obj.texture && !_texCache[obj.texture]) {
-            const img = new Image();
-            img.src = obj.texture;
-            _texCache[obj.texture] = img;
-        }
-    }
+       const _texCache = {};
+        function loadTextures() { for (const obj of texturedObjects) { if (obj.texture && !_texCache[obj.texture]) { const img = new Image(); img.src = obj.texture; _texCache[obj.texture] = img; } } }
+        loadTextures();
+    
 
-    // Player spritesheet
-    const playerImg = new Image();
-    playerImg.src = 'assets/spritesheet(1).png';
-    _texCache['assets/spritesheet(1).png'] = playerImg;
-}
+    
+
 
         function saveWorldItemState() { try { const s = {}; texturedObjects.forEach(i => { if (i.collected) s[i.id] = true; }); sessionStorage.setItem('looping_rooms_world_items', JSON.stringify(s)); } catch (e) { } }
         function loadWorldItemState() { try { const raw = sessionStorage.getItem('looping_rooms_world_items'); if (!raw) return; const s = JSON.parse(raw); texturedObjects.forEach(i => { if (s[i.id]) i.collected = true; }); } catch (e) { } }
@@ -1039,23 +993,7 @@
         const player = { x: _spawn.x, y: _spawn.y, width: 45, height: 60, velocityX: 0, velocityY: 0, speed: 5 };
         const camera = { x: player.x, y: player.y, zoom: 1.4 };
 
-        // After the player object is defined:
-        const PLAYER_ANIMS = {
-         // row index for each facing direction
-        down:  0,
-        left:  0,
-        right: 0,
-        up:    0
-    };
-        let playerFacing = 'down'; // tracks last movement direction
-
-        const playerAnim = createAnim(
-        'assets/spritesheet(1).png',
-        45,    // frameW  — width of one frame on the sheet
-        60,    // frameH  — height of one frame
-        1,     // cols    — number of frames per row
-        4      // fps     — animation speed
-    );
+        
 
         // Which apt is player in?
         function getPlayerApt() { const px = player.x + player.width / 2, py = player.y + player.height / 2; if (px < CORR_X1 && py < CORR_Y1) return 'NW'; if (px > CORR_X2 && py < CORR_Y1) return 'NE'; if (px < CORR_X1 && py > CORR_Y2) return 'SW'; if (px > CORR_X2 && py > CORR_Y2) return 'SE'; return null; }
@@ -1545,10 +1483,10 @@
             // Living Room
             const NW_LIV_X = NW_NARROW_ROOM_W, NW_LIV_Y = NW_SPLIT_Y;
             const NW_LIV_W = CORR_X1 - NW_NARROW_ROOM_W, NW_LIV_H = CORR_Y1 - NW_SPLIT_Y;
-            drawCheckerboard(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H, '#f4f4f4', '#e0e0e0', T);
-            ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
+            drawCheckerboard(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H, '#bca89f', '#e0e0e0', T);
+            ctx.strokeStyle = 'rgba(150,75,0,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H);
-            drawRoomLabel('LIVING ROOM', NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H, 'rgba(80,80,80,0.35)');
+            drawRoomLabel('LIVING ROOM', NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H, 'rgba(150,75,0,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'nw_living'));
 
             // ── NE APARTMENT ──
@@ -1802,45 +1740,35 @@
             }
         }
 
-       function drawPlayer() {
-    const cx = player.x + player.width / 2;
-    const cy = player.y + player.height / 2;
+    function drawPlayer() {
+        const cx = player.x + player.width / 2;
+        const cy = player.y + player.height / 2;
 
-    // Update facing direction from velocity
-    if      (player.velocityY > 0) playerFacing = 'down';
-    else if (player.velocityY < 0) playerFacing = 'up';
-    else if (player.velocityX < 0) playerFacing = 'left';
-    else if (player.velocityX > 0) playerFacing = 'right';
+        // Update facing direction from velocity
+        if      (player.velocityY > 0) playerFacing = 'down';
+        else if (player.velocityY < 0) playerFacing = 'up';
+        else if (player.velocityX < 0) playerFacing = 'left';
+        else if (player.velocityX > 0) playerFacing = 'right';
 
-    const moving = player.velocityX !== 0 || player.velocityY !== 0;
-
-    if (moving) {
-        updateAnim(playerAnim);
-    } else {
-        playerAnim.frame = 0;
-        playerAnim.timer = 0;
+        const img = _texCache['assets/player.png'];
+        
+        if (img && img.complete && img.naturalWidth > 0) {
+            // Draw first frame (static sprite)
+            ctx.drawImage(img,
+                0, 0, player.width, player.height,
+                player.x, player.y, player.width, player.height
+            );
+        } else {
+            // Fallback circle if sprite hasn't loaded yet
+            ctx.fillStyle = '#e05555';
+            ctx.beginPath();
+            ctx.arc(cx, cy, player.width / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ff8888';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
     }
-
-    const img = _texCache['assets/spritesheet(1).png'];
-    
-    if (img && img.complete && img.naturalWidth > 0) {
-        const srcX = 0;
-        const srcY = playerAnim.frame * playerAnim.frameH;
-        ctx.drawImage(img,
-            srcX, srcY, playerAnim.frameW, playerAnim.frameH,
-            player.x, player.y, player.width, player.height
-        );
-    } else {
-        // Fallback circle if sheet hasn't loaded yet
-        ctx.fillStyle = '#e05555';
-        ctx.beginPath();
-        ctx.arc(cx, cy, player.width / 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#ff8888';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-    }
-}
 
         function drawFeedbacks() {
             ctx.save();
