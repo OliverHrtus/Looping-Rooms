@@ -92,6 +92,11 @@
         <div class="inv-slot" id="slot-2"><span class="slot-key">3</span><span class="item-icon" id="icon-2"></span><span class="item-count" id="count-2"></span></div>
         <div class="inv-slot" id="slot-3"><span class="slot-key">4</span><span class="item-icon" id="icon-3"></span><span class="item-count" id="count-3"></span></div>
         <div class="inv-slot" id="slot-4"><span class="slot-key">5</span><span class="item-icon" id="icon-4"></span><span class="item-count" id="count-4"></span></div>
+        <div class="inv-slot" id="slot-5"><span class="slot-key">6</span><span class="item-icon" id="icon-5"></span><span class="item-count" id="count-5"></span></div>
+        <div class="inv-slot" id="slot-6"><span class="slot-key">7</span><span class="item-icon" id="icon-6"></span><span class="item-count" id="count-6"></span></div>
+        <div class="inv-slot" id="slot-7"><span class="slot-key">8</span><span class="item-icon" id="icon-7"></span><span class="item-count" id="count-7"></span></div>
+        <div class="inv-slot" id="slot-8"><span class="slot-key">9</span><span class="item-icon" id="icon-8"></span><span class="item-count" id="count-8"></span></div>
+        <div class="inv-slot" id="slot-9"><span class="slot-key">0</span><span class="item-icon" id="icon-9"></span><span class="item-count" id="count-9"></span></div>
     </div>
     <div id="active-item-label"></div>
     <div id="pickup-prompt"></div>
@@ -158,7 +163,7 @@
         });
 
         // ── INVENTORY ─────────────────────────────────────────────────────────
-        const INVENTORY_SIZE = 5;
+        const INVENTORY_SIZE = 10;
         const inventory = Array(INVENTORY_SIZE).fill(null);
         let activeSlot = 0;
 
@@ -402,9 +407,10 @@
             if (noteOpen && (e.code === 'KeyE' || e.code === 'Escape')) { closeNote(); return; }
             if (lockboxOpen && e.code === 'Escape') { closeLockbox(); return; }
             keys[e.code] = true;
-            if (e.code >= 'Digit1' && e.code <= 'Digit5') {
-                activeSlot = parseInt(e.code.replace('Digit', '')) - 1;
-                renderInventory();
+            if (e.code.startsWith('Digit')) {
+                const num = parseInt(e.code.replace('Digit', ''), 10);
+                activeSlot = num === 0 ? 9 : num - 1;
+                if (activeSlot >= 0 && activeSlot < INVENTORY_SIZE) renderInventory();
             }
             if (e.code === 'KeyE') tryInteract();
             if (e.code === 'KeyG') dropActiveItem();

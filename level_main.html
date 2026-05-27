@@ -430,16 +430,16 @@
 
 
     <div id="inventory">
-        <div class="inv-slot active" id="slot-0"><span class="slot-key">1</span><span class="item-icon"
-                id="icon-0"></span><span class="item-count" id="count-0"></span></div>
-        <div class="inv-slot" id="slot-1"><span class="slot-key">2</span><span class="item-icon"
-                id="icon-1"></span><span class="item-count" id="count-1"></span></div>
-        <div class="inv-slot" id="slot-2"><span class="slot-key">3</span><span class="item-icon"
-                id="icon-2"></span><span class="item-count" id="count-2"></span></div>
-        <div class="inv-slot" id="slot-3"><span class="slot-key">4</span><span class="item-icon"
-                id="icon-3"></span><span class="item-count" id="count-3"></span></div>
-        <div class="inv-slot" id="slot-4"><span class="slot-key">5</span><span class="item-icon"
-                id="icon-4"></span><span class="item-count" id="count-4"></span></div>
+        <div class="inv-slot active" id="slot-0"><span class="slot-key">1</span><span class="item-icon" id="icon-0"></span><span class="item-count" id="count-0"></span></div>
+        <div class="inv-slot" id="slot-1"><span class="slot-key">2</span><span class="item-icon" id="icon-1"></span><span class="item-count" id="count-1"></span></div>
+        <div class="inv-slot" id="slot-2"><span class="slot-key">3</span><span class="item-icon" id="icon-2"></span><span class="item-count" id="count-2"></span></div>
+        <div class="inv-slot" id="slot-3"><span class="slot-key">4</span><span class="item-icon" id="icon-3"></span><span class="item-count" id="count-3"></span></div>
+        <div class="inv-slot" id="slot-4"><span class="slot-key">5</span><span class="item-icon" id="icon-4"></span><span class="item-count" id="count-4"></span></div>
+        <div class="inv-slot" id="slot-5"><span class="slot-key">6</span><span class="item-icon" id="icon-5"></span><span class="item-count" id="count-5"></span></div>
+        <div class="inv-slot" id="slot-6"><span class="slot-key">7</span><span class="item-icon" id="icon-6"></span><span class="item-count" id="count-6"></span></div>
+        <div class="inv-slot" id="slot-7"><span class="slot-key">8</span><span class="item-icon" id="icon-7"></span><span class="item-count" id="count-7"></span></div>
+        <div class="inv-slot" id="slot-8"><span class="slot-key">9</span><span class="item-icon" id="icon-8"></span><span class="item-count" id="count-8"></span></div>
+        <div class="inv-slot" id="slot-9"><span class="slot-key">0</span><span class="item-icon" id="icon-9"></span><span class="item-count" id="count-9"></span></div>
     </div>
     <div id="active-item-label"></div>
     <div id="pickup-prompt"></div>
@@ -583,9 +583,9 @@
             // NE apt: west wall at x=1275
             { id: 'door_NE', aptId: 'NE', x: CORR_X2, y: NW_NE_DOOR_CENTER - DOOR_OPENING / 2, w: DOOR_W, h: DOOR_OPENING, side: 'west', openAnim: 0, isOpen: false },
             // SW apt: east wall at x=925, door in living room section
-            { id: 'door_SW', aptId: 'SW', x: CORR_X1 - DOOR_W, y: SW_SE_DOOR_CENTER - DOOR_OPENING / 2, w: DOOR_W, h: DOOR_OPENING, side: 'east', openAnim: 0, isOpen: false },
+            { id: 'door_SW', aptId: 'SW', x: CORR_X1 - DOOR_W, y: SW_SE_DOOR_CENTER - DOOR_OPENING / 2, w: DOOR_W, h: DOOR_OPENING, side: 'east', openAnim: 0, isOpen: false, restricted: true },
             // SE apt: west wall at x=1275
-            { id: 'door_SE', aptId: 'SE', x: CORR_X2, y: SW_SE_DOOR_CENTER - DOOR_OPENING / 2, w: DOOR_W, h: DOOR_OPENING, side: 'west', openAnim: 0, isOpen: false },
+            { id: 'door_SE', aptId: 'SE', x: CORR_X2, y: SW_SE_DOOR_CENTER - DOOR_OPENING / 2, w: DOOR_W, h: DOOR_OPENING, side: 'west', openAnim: 0, isOpen: false, restricted: true },
         ];
 
         // Exit doors (level transitions)
@@ -609,7 +609,7 @@
         // ════════════════════════════════════════════════════════════
         // INVENTORY
         // ════════════════════════════════════════════════════════════
-        const INVENTORY_SIZE = 5;
+        const INVENTORY_SIZE = 10;
         const inventory = Array(INVENTORY_SIZE).fill(null);
         let activeSlot = 0;
         function saveInventory() { const payload = JSON.stringify({ ts: Date.now(), slots: inventory }); try { sessionStorage.setItem('looping_rooms_inventory', payload); } catch (e) { } try { localStorage.setItem('looping_rooms_inventory', payload); } catch (e) { } }
@@ -999,7 +999,7 @@
             
             // NE apt items
             { id: 'note_2', texture: 'assets/note.png', icon: '📝', label: 'Note #2', x: 1500, y: 150, width: 40, height: 40, collected: false, isNote: true, noteTitle: 'Note #2', noteContent: '6', IsPuzzleItem: true, dialogue: ['* Another note.', '* The number 6 again...'] },
-            { id: 'key_north', texture: 'assets/key.png', icon: '🔑', label: 'North Key', x: 1900, y: 150, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'north', IsPuzzleItem: true, dialogue: ['* A cold metal key.', '* For the north exit.'] },
+            { id: 'key_west', texture: 'assets/key.png', icon: '🔑', label: 'West Key', x: 1900, y: 150, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'west', IsPuzzleItem: true, dialogue: ['* A cold metal key.', '* For the west exit.'] },
             // SW apt item
             { id: 'note_3', texture: 'assets/note.png', icon: '📝', label: 'Note #3', x: 200, y: 1100, width: 40, height: 40, collected: false, isNote: true, noteTitle: 'Note #3', noteContent: '5', IsPuzzleItem: true, dialogue: ['* A damp note.', '* The number 5 is barely readable.'] },
             // SE apt item
@@ -1065,9 +1065,20 @@
             const curApt = getPlayerApt();
             if (curApt !== lastPlayerApt) {
                 // Close old apt door
-                if (lastPlayerApt) { const d = APT_DOORS.find(d => d.aptId === lastPlayerApt); if (d) d.isOpen = false; }
-                // Open new apt door
-                if (curApt) { const d = APT_DOORS.find(d => d.aptId === curApt); if (d) d.isOpen = true; }
+                if (lastPlayerApt) { const d = APT_DOORS.find(d => d.aptId === lastPlayerApt); if (d) { d.isOpen = false; d.openAnim = 0; } }
+                // Open new apt door unless it is restricted
+                if (curApt) {
+                    const d = APT_DOORS.find(d => d.aptId === curApt);
+                    if (d) {
+                        if (d.restricted) {
+                            d.isOpen = false;
+                            d.openAnim = 0;
+                            showDoorMsg('Restricted Area!');
+                        } else {
+                            d.isOpen = true;
+                        }
+                    }
+                }
                 lastPlayerApt = curApt;
             }
         }
@@ -1097,7 +1108,11 @@
             if (noteOpen && (e.code === 'KeyE' || e.code === 'Escape')) { closeNote(); return; }
             if (lockboxOpen && e.code === 'Escape') { closeLockbox(); return; }
             keys[e.code] = true;
-            if (e.code >= 'Digit1' && e.code <= 'Digit5') { activeSlot = parseInt(e.code.replace('Digit', '')) - 1; renderInventory(); }
+            if (e.code.startsWith('Digit')) {
+                const num = parseInt(e.code.replace('Digit', ''), 10);
+                activeSlot = num === 0 ? 9 : num - 1;
+                if (activeSlot >= 0 && activeSlot < INVENTORY_SIZE) renderInventory();
+            }
             if (e.code === 'KeyE') tryInteract();
             if (e.code === 'KeyG') dropActiveItem();
 
@@ -1211,7 +1226,16 @@
             if (nearExit) { const keyId = 'key_' + nearExit.id; if (hasItem(keyId)) { fadeToLevel(`level_${nearExit.id}.html`, nearExit.id); } else { showDoorMsg(`Need the ${nearExit.id.charAt(0).toUpperCase() + nearExit.id.slice(1)} Key`); } return; }
             // Apt door toggle
             const nearApt = getNearAptDoor();
-            if (nearApt) { nearApt.isOpen = !nearApt.isOpen; return; }
+            if (nearApt) {
+                if (nearApt.restricted) {
+                    nearApt.isOpen = false;
+                    nearApt.openAnim = 0;
+                    showDoorMsg('Restricted Area!');
+                    return;
+                }
+                nearApt.isOpen = !nearApt.isOpen;
+                return;
+            }
             const droppedItem = getNearbyDroppedItem();
             if (droppedItem) { const stackId = droppedItem.baseId || droppedItem.id; if (addToInventory({ ...droppedItem, id: stackId })) { droppedItem.collected = true; feedbacks.push({ text: `+ ${droppedItem.label}`, x: player.x + 16, y: player.y - 10, alpha: 1.0, vy: -0.5, color: '#ffd700' }); } return; }
             const nearTex = getNearTexturedObject();
@@ -1875,7 +1899,14 @@
 
             if (!dialogueOpen) {
                 if (nearExit) { pickupPromptEl.textContent = `🚪 Press E to exit ${nearExit.id.toUpperCase()}`; pickupPromptEl.classList.add('visible'); }
-                else if (nearAptDoor) { pickupPromptEl.textContent = nearAptDoor.isOpen ? `🚪 Press E to close door` : `🚪 Press E to open door`; pickupPromptEl.classList.add('visible'); }
+                else if (nearAptDoor) {
+                    if (nearAptDoor.restricted) {
+                        pickupPromptEl.textContent = 'Restricted Area!';
+                    } else {
+                        pickupPromptEl.textContent = nearAptDoor.isOpen ? `🚪 Press E to close door` : `🚪 Press E to open door`;
+                    }
+                    pickupPromptEl.classList.add('visible');
+                }
                 else if (nearDropped) { pickupPromptEl.textContent = `Press E to pick up ${nearDropped.label}`; pickupPromptEl.classList.add('visible'); }
                 else if (nearTex) {
                     if (nearTex.isNote) pickupPromptEl.textContent = `Press E to read ${nearTex.label}`;
