@@ -1058,7 +1058,7 @@
         // ── ROOM DEFINITIONS: All rooms as a flat list with their bounds ──
         // Each room: { x, y, w, h }
         // The corridor (dark cross) is not a "room" — it's always visible.
-        const NW_NARROW_ROOM_W_DEF = 300;
+        const NW_NARROW_ROOM_W_DEF = 240;
         const ROOMS = [
             // NW apartment
             { id: 'nw_kitchen',   x: 0,        y: 0,          w: NW_SPLIT_X,                   h: NW_SPLIT_Y },
@@ -1078,6 +1078,9 @@
             { id: 'se_bedroom',   x: CORR_X2,  y: SE_SPLIT_Y, w: SE_SPLIT_X - CORR_X2,          h: H - SE_SPLIT_Y },
             { id: 'se_bathroom',  x: SE_SPLIT_X, y: SE_SPLIT_Y, w: W - SE_SPLIT_X,               h: H - SE_SPLIT_Y },
         ];
+
+        // Rooms that should have black walls with an outer glow effect
+        const DARK_WALL_ROOMS = ['nw_newroom'];
 
         // Returns the room the player center is currently inside, or null (corridor)
         function getPlayerRoom() {
