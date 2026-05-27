@@ -608,365 +608,101 @@
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
-        const texturedObjects = [
+         const texturedObjects = [
+
+
+            // ══════════════════════════════════════
+            // NW KITCHEN  (x:0–462, y:0–300)
+            // ══════════════════════════════════════
+            { id: 'nw_fridge', x: 20, y: 20, width: 60, height: 100, texture: 'assets/fridge.png', label: 'Fridge', solid: true, dialogue: ['* A large fridge humming quietly.', '* The door is slightly ajar.', '* Inside, you see a faint glint of something metallic.'] },
+            { id: 'nw_oven', x: 180, y: 20, width: 70, height: 60, texture: 'assets/oven.png', label: 'Oven', solid: true, dialogue: ['* A dusty oven with a broken door.', '* It seems to be stuck shut.', '* Maybe there is something inside?'] },
+            { id: 'nw_washing_machine', x: 300, y: 20, width: 70, height: 60, texture: 'assets/washing_machine.png', label: 'Washing Machine', solid: true, dialogue: ['* An old washing machine.'] },
             {
-                id: 'textured_obj_3',
-                x: 1800,
-                y: 400,
-                width: 60,
-                height: 90,
-                texture: 'assets/wardrobe.png',
-                label: 'Wardrobe',
-                solid: true,
-                dialogue: [
-                    '* A tall wardrobe with mirrored doors.',
-                    '* The reflection shows the room behind you, but something seems off...',
-                    '* Inside, you spot a strange object buried under the clothes.'
-                ],
-                containsItem: {
-                    id: 'plunger',
-                    icon: '🪠',
-                    
-                    label: 'Plunger'
-                },
-                itemTaken: false
+                id: 'nw_cabinet', x: 380, y: 170, width: 80, height: 100, texture: 'assets/cabinet.png', label: 'Kitchen Cabinet', solid: true,
+                dialogue: ['* A tall kitchen cabinet with glass doors.', '* Behind one of the containers, you notice a small key.'],
+                containsItem: { id: 'key_lockbox', icon: '🔑', texture: 'assets/key.png', label: 'Lockbox Key' }, itemTaken: false
             },
 
+            // ══════════════════════════════════════
+            // NW BEDROOM  (x:462–925, y:0–300)
+            // ══════════════════════════════════════
+            { id: 'nw_bed', x: 580, y: 20, width: 150, height: 115, texture: 'assets/bed.png', label: 'Bed', solid: true, dialogue: ['* A sturdy bed.', '* It looks comfortable.'] },
+            { id: 'nw_nightstand', x: 500, y: 20, width: 60, height: 60, texture: 'assets/night_table.png', label: 'Nightstand', solid: true, dialogue: ['* A small nightstand.'] },
             {
-                id: 'puzzle_lockbox',
-                x: 1900,
-                y: 400,
-                width: 45,
-                height: 45,
-                texture: 'assets/small_box.png',
-                label: 'Locked Box',
-                solid: true,
-                isCustomPuzzle: true,
-                requiresItem: 'key_wardrobe',
-                unlocked: false,
-                itemTaken: false,
-                containsItem: { id: 'item_axe', icon: '🪓', label: 'Heavy Axe' },
-                dialogue: ['* A small wooden box reinforced with iron brackets.', '* It has a sturdy brass padlock.', '* It needs a specific key to open.']
+                id: 'nw_desk', x: 810, y: 220, width: 100, height: 60, texture: 'assets/desk.png', label: 'Desk', solid: true,
+                dialogue: ['* A wooden desk.', '* The top drawer is slightly open.', '* Inside, you find a note...'],
+                containsItem: { id: 'note_desk', icon: '📝', texture: 'assets/note.png', label: '1# Note', dialogue: ['* A handwritten note with the number "6" scribbled on it.', '* It might be a clue for something.'] }, itemTaken: false
+            },
+            { id: 'nw_dresser', x: 850, y: 35, width: 40, height: 100, texture: 'assets/dresser.png', label: 'Dresser', solid: true, dialogue: ['* A tall dresser with several drawers.'] },
+
+            // ══════════════════════════════════════
+            // NW BATHROOM/ROOM  (x:0–240, y:300–613)
+            // ══════════════════════════════════════
+            { id: 'nw_sink', x: 145, y: 330, width: 80, height: 60, texture: 'assets/sink.png', label: 'Sink', solid: true, dialogue: ['* A bathroom sink with a mirror above it.', '* The faucet drips occasionally.'] },
+            { id: 'nw_toilet', x: 10, y: 450, width: 60, height: 60, texture: 'assets/toilet.png', label: 'Toilet', solid: true, dialogue: ['* A simple toilet.'] },
+            { id: 'nw_shower', x: 30, y: 530, width: 60, height: 60, texture: 'assets/shower.png', label: 'Shower', solid: true, dialogue: ['* A shower stall with a glass door.', '* The tiles are cracked and moldy.'] },
+            { id: 'nw_mirror', x: 250, y: 530, width: 60, height: 60, texture: 'assets/mirror.png', label: 'Mirror', solid: true, dialogue: ['* A large wall mirror.', '* You notice something odd about the corners.'] },
+
+            // ══════════════════════════════════════
+            // NW LIVING ROOM  (x:240–925, y:300–613)
+            // ══════════════════════════════════════
+            { id: 'nw_tv', x: 370, y: 318, width: 180, height: 80, texture: 'assets/tv.png', label: 'TV', solid: true, dialogue: ['* A modern TV.', '* It is plugged in and seems to be working.'] },
+            { id: 'nw_rug', x: 370, y: 430, width: 100, height: 55, solid: false, texture: 'assets/rug.png', label: 'Rug', dialogue: ['* A faded rug with an intricate pattern.'] },
+            { id: 'nw_couch', x: 380, y: 520, width: 160, height: 65, texture: 'assets/couch.png', label: 'Couch', solid: true, dialogue: ['* A comfortable couch.', '* There is a small book on the seat.'] },
+            {
+                id: 'nw_liqor_cabinet', x: 815, y: 310, width: 80, height: 100, solid: true, texture: 'assets/liqor_cabinet.png', label: 'Liquor Cabinet',
+                isCustomPuzzle: true, requiresItem: 'key_liqor', unlocked: false, itemTaken: false,
+                containsItem: { id: 'small_screwdriver', icon: '🪛', label: 'Small Screwdriver' },
+                dialogue: ['* A liquor cabinet filled with dusty bottles.', '* The glass doors are locked.', '* You can see a small screwdriver lying on one of the shelves.']
             },
 
-
-
+            // ══════════════════════════════════════
+            // NE BEDROOM  (x:1275–1737, y:0–300)
+            // ══════════════════════════════════════
+            { id: 'ne_nightstand', x: 1290, y: 15, width: 60, height: 60, texture: 'assets/night_table.png', label: 'Nightstand', solid: true, dialogue: ['* A small nightstand.'] },
+            { id: 'ne_bed', x: 1360, y: 10, width: 150, height: 115, texture: 'assets/bed.png', label: 'Bed', solid: true, dialogue: ['* A neatly made bed.', '* The sheets are crisp and white.'] },
             {
-                id: 'puzzle_vent',
-                x: 1350,
-                y: 100,
-                width: 50,
-                height: 50,
-                texture: 'assets/vent.png',
-                label: 'Loose Wall Vent',
-                solid: true,
-                isCustomPuzzle: true,
-                requiresItem: 'item_screwdriver',
-                unlocked: false,
-                itemTaken: false,
-                containsItem: { id: 'item_token', icon: '🪙', label: 'Strange Coin' },
+                id: 'ne_dresser', x: 1690, y: 15, width: 40, height: 100, texture: 'assets/dresser.png', label: 'Dresser', solid: true,
+                dialogue: ['* A tall dresser.', '* Inside you spot something shiny buried under the clothes.'],
+                containsItem: { id: 'key_lockbox', icon: '🔑', texture: 'assets/key.png', label: 'Lockbox Key' }, itemTaken: false
+            },
+            { id: 'ne_desk', x: 1300, y: 220,width: 100, height: 60, texture: 'assets/desk.png', label: 'Desk', solid: true, dialogue: ['* A wooden desk.', '* Papers are scattered across the surface.'] },
+
+            // ══════════════════════════════════════
+            // NE BATHROOM  (x:1737–2200, y:0–300)
+            // ══════════════════════════════════════
+            { id: 'ne_sink', x: 1840, y: 15, width: 80, height: 60, texture: 'assets/sink.png', label: 'Sink', solid: true, dialogue: ['* A bathroom sink with a mirror above it.', '* The faucet drips occasionally.'] },
+            { id: 'ne_shower', x: 2025, y: 10, width: 110, height: 75, texture: 'assets/shower.png', label: 'Shower', solid: true, dialogue: ['* A shower stall.', '* The tiles are cracked.'] },
+            { id: 'ne_toilet', x: 1750, y: 185, width: 90, height: 80, texture: 'assets/toilet.png', label: 'Toilet', solid: true, dialogue: ['* A simple toilet.'] },
+
+            // ══════════════════════════════════════
+            // NE LIVING ROOM  (x:1275–2200, y:300–613)
+            // ══════════════════════════════════════
+            { id: 'ne_tv', x: 1598, y: 318, width: 180, height: 80, texture: 'assets/tv.png', label: 'TV', solid: true, dialogue: ['* A large flat-screen TV.'] },
+            { id: 'ne_rug', x: 1670, y: 430, width: 100, height: 55, solid: false, texture: 'assets/rug.png', label: 'Rug', dialogue: ['* A worn rug on the floor.'] },
+            { id: 'ne_couch', x: 1610, y: 520, width: 160, height: 65, texture: 'assets/couch.png', label: 'Couch', solid: true, dialogue: ['* A long couch facing the TV.'] },
+            {
+                id: 'ne_liqor_cabinet', x: 1800, y: 320, width: 80, height: 100, solid: true, texture: 'assets/liqor_cabinet.png', label: 'Liquor Cabinet',
+                isCustomPuzzle: true, requiresItem: 'key_liqor', unlocked: false, itemTaken: false,
+                containsItem: { id: 'small_screwdriver', icon: '🪛', label: 'Small Screwdriver' },
+                dialogue: ['* A liquor cabinet filled with dusty bottles.', '* The glass doors are locked.']
+            },
+
+            // ══════════════════════════════════════
+            // NE PUZZLE ITEMS
+            // ══════════════════════════════════════
+            {
+                id: 'puzzle_vent', x: 1680, y: 250, width: 35, height: 35, texture: 'assets/vent.png', label: 'Loose Wall Vent', solid: true,
+                isCustomPuzzle: true, requiresItem: 'small_screwdriver', unlocked: false, itemTaken: false,
+                containsItem: { id: 'key_north', icon: '🔑', label: 'North Key' },
                 dialogue: ['* A ventilation grate set low in the wall.', '* The flathead screws are loose, but your fingernails cannot turn them.']
             },
-
             {
-                id: 'textured_obj_4',
-                x: 300,
-                y: 20,
-                width: 70,
-                height: 60,
-                texture: 'assets/washing_machine.png',
-                label: 'Washing Machine',
-                solid: true,
-                dialogue: [
-                    '* An old washing machine.'
-                ],
+                id: 'puzzle_lockbox', x: 1310, y: 540, width: 40, height: 40, texture: 'assets/small_box.png', label: 'Lock Box', solid: true,
+                isCustomPuzzle: true, requiresItem: 'key_lockbox', unlocked: false, itemTaken: false,
+                containsItem: { id: 'key_liqor', icon: '🔑', label: 'Liquor Cabinet Key' },
+                dialogue: ['* A small wooden box with a sturdy brass padlock.', '* It needs a specific key to open.']
             },
-
-            {
-                id: 'textured_obj_5',
-                x: 180,
-                y: 20,
-                width: 70,
-                height: 60,
-                texture: 'assets/oven.png',
-                label: 'Oven',
-                solid: true,
-                dialogue: [
-                    '* A dusty oven with a broken door.',
-                    '* It seems to be stuck shut.',
-                    '* Maybe there is something inside?'
-                ],
-            },
-
-            {
-                id: 'textured_obj_6',
-                x: 20,
-                y: 20,
-                width: 60,
-                height: 100,
-                texture: 'assets/fridge.png',
-                label: 'Fridge',
-                solid: true,
-                dialogue: [
-                    '* A large fridge humming quietly.',
-                    '* The door is slightly ajar.',
-                    '* Inside, you see a faint glint of something metallic.'
-                ],
-            },
-
-            {
-                id: 'textured_obj_7',
-                x: 380,
-                y: 170,
-                width: 80,
-                height: 100,
-                texture: 'assets/cabinet.png',
-                label: 'Kitchen Cabinet',
-                solid: true,
-                dialogue: [
-                    '* A tall kitchen cabinet with glass doors.',
-                    '* The shelves are lined with dusty dishes and old food containers.',
-                    '* Behind one of the containers, you notice a small key.'
-                ],
-                containsItem: {
-                    id: 'key_cabinet',
-                    icon: '🔑',
-                    texture: 'assets/key.png',
-                    label: 'Cabinet Key'
-                },
-                itemTaken: false
-            },
-
-            {
-                id: 'textured_obj_8',
-                x: 600,
-                y: 35,
-                width: 150,
-                height: 100,
-                texture: 'assets/bed.png',
-                label: 'Bed',
-                solid: true,
-                dialogue: [
-                    '* A sturdy bed.',
-                    '* It looks comfortable.',
-                    '* There is a small pillow on it.'
-                ]
-            },
-
-            {
-                id: 'textured_obj_9',
-                x: 810,
-                y: 220,
-                width: 100,
-                height: 60,
-                texture: 'assets/desk.png',
-                label: 'Desk',
-                solid: true,
-                dialogue: [
-                    '* A wooden desk with several drawers.',
-                    '* The top drawer is slightly open.',
-                    '* Inside, you find a mysterious note containg the number ...'
-                ],
-                containsItem: {
-                    id: 'note_desk',
-                    icon: '📝',
-                    texture: 'assets/note.png',
-                    label: '1# Note',
-                    dialogue: [
-                        '* A handwritten note with the number "6" scribbled on it.',
-                        '* It might be a clue for something.'
-                    ],
-                },
-                itemTaken: false
-            },
-
-            {
-                id: 'textured_obj_10',
-                x: 500,
-                y: 35,
-                width: 60,
-                height: 60,
-                texture: 'assets/night_table.png',
-                label: 'Nightstand',
-                solid: true,
-                dialogue: [
-                    '* A sturdy nightstand.',
-                    '* It looks comfortable.',
-                    ''
-                ]
-            },
-
-            {
-                id: 'textured_obj_11',
-                x: 850,
-                y: 35,
-                width: 40,
-                height: 100,
-                texture: 'assets/dresser.png',
-                label: 'Dresser',
-                solid: true,
-                dialogue: [
-                    '* A tall dresser with several drawers.',
-                ],
-
-            },
-
-            {
-                id: 'textured_obj_12',
-                x: 395,
-                y: 530,
-                width: 150,
-                height: 65,
-                texture: 'assets/couch.png',
-                label: 'Couch',
-                solid: true,
-                dialogue: [
-                    '* A comfortable couch.',
-                    '* It looks inviting.',
-                    '* There is a small book on the seat.'
-                ],
-
-            },
-
-            {
-                id: 'textured_obj_13',
-                x: 380,
-                y: 320,
-                width: 180,
-                height: 80,
-                texture: 'assets/tv.png',
-                label: 'TV',
-                solid: true,
-                dialogue: [
-                    '* A modern TV.',
-                    '* It is plugged in and seems to be working.'
-                ],
-            },
-
-           
-
-            {
-                id: 'textured_obj_17',
-                x: 420,
-                y: 440,
-                width: 100,
-                height: 65,
-                solid: false,
-                texture: 'assets/rug.png',
-                label: 'Rug',
-                dialogue: [
-                    '* A faded rug with an intricate pattern.',
-                    '* The colors are muted, but you can make out a strange symbol woven into the design.'
-                ],
-            },
-
-            {
-                id: 'textured_obj_18',
-                x: 150,
-                y: 500,
-                width: 60,
-                height: 60,
-                solid: true,
-                texture: 'assets/toilet.png',
-                label: 'Toilet',
-                isCustomPuzzle: true,
-                requiresItem: 'plunger',
-                unlocked: false,
-                itemTaken: false,
-                dialogue: [
-                    '* A simple toilet.',
-                    '* It seems that something is stuck inside the bowl.',
-                    '* You might be able to retrieve it if you had the right tool.'
-                ],
-                containsItem: {
-                    id: 'note_desk2',
-                    icon: '📝',
-                    texture: 'assets/note.png',
-                    label: '2# Note',
-                    dialogue: [
-                        '* A handwritten note with the number "6" scribbled on it.',
-                        '* It might be a clue for something.'
-                    ],
-                },
-            },
-
-            {
-                id: 'textured_obj_19',
-                x: 145,
-                y: 330,
-                width: 80,
-                height: 60,
-                solid: true,
-                texture: 'assets/sink.png',
-                label: 'Sink',
-                dialogue: [
-                    '* A bathroom sink with a mirror above it.',
-                    '* The faucet drips occasionally.',
-                    '* There is a small soap dish with a bar of soap on the counter.'
-                ],
-            },
-
-            {
-                id: 'textured_obj_20',
-                x: 30,
-                y: 530,
-                width: 60,
-                height: 60,
-                solid: true,
-                texture: 'assets/shower.png',
-                label: 'Shower',
-                dialogue: [
-                    '* A shower stall with a glass door.',
-                    '* The tiles are cracked and moldy.',
-                    '* There is a small shampoo bottle on the floor.'
-                ],
-            },
-
-            {
-                id: 'textured_obj_21',
-                x: 250,
-                y: 530,
-                width: 60,
-                height: 60,
-                solid: true,
-                texture: 'assets/mirror.png',
-                label: 'Mirror',
-                dialogue: [
-                    '* A large wall mirror.',
-                    '* The reflection is clear, but you notice something odd about the corners of the mirror.',
-                ],
-
-            },
-
-            {
-                id: 'textured_obj_22',
-                x: 815,
-                y: 310,
-                width: 80,
-                height: 100,
-                solid: true,
-                texture: 'assets/liqor_cabinet.png',
-                label: 'Liquor Cabinet',
-                dialogue: [
-                    '* A liquor cabinet filled with dusty bottles.',
-                    '* The glass doors are locked, but you can see a small key hanging on a hook inside.'
-                ],
-            },
-
-            // NW apt items
-
-            // NW apt items
-
-
-            // NE apt items
-            { id: 'note_2', texture: 'assets/note.png', icon: '📝', label: 'Note #2', x: 1500, y: 150, width: 40, height: 40, collected: false, isNote: true, noteTitle: 'Note #2', noteContent: '6', IsPuzzleItem: true, dialogue: ['* Another note.', '* The number 6 again...'] },
-            { id: 'key_north', texture: 'assets/key.png', icon: '🔑', label: 'North Key', x: 1900, y: 150, width: 28, height: 28, collected: false, isDoorKey: true, doorId: 'north', IsPuzzleItem: true, dialogue: ['* A cold metal key.', '* For the north exit.'] },
-            // SW apt item
-            { id: 'note_3', texture: 'assets/note.png', icon: '📝', label: 'Note #3', x: 200, y: 1100, width: 40, height: 40, collected: false, isNote: true, noteTitle: 'Note #3', noteContent: '5', IsPuzzleItem: true, dialogue: ['* A damp note.', '* The number 5 is barely readable.'] },
-            // SE apt item
-            { id: 'note_4', texture: 'assets/note.png', icon: '📝', label: 'Note #4', x: 1700, y: 1100, width: 40, height: 40, collected: false, isNote: true, noteTitle: 'Note #4', noteContent: '8', IsPuzzleItem: true, dialogue: ['* The last note.', '* The number 8 stares back at you.'] },
-            // Corridor center lockbox
-            { id: 'lockbox', texture: 'assets/box.png', icon: '📦', label: 'Lock Box', x: 1075, y: 775, width: 50, height: 50, collected: false, isLockbox: true, unlocked: false, IsPuzzleItem: true, dialogue: ['* A heavy metal lockbox.', '* It has a 4-digit combination lock.', '* The digits must be entered in the right order...'] },
         ];
 
         const _texCache = {};
