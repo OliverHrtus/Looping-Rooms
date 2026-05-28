@@ -632,8 +632,9 @@
             // NW KITCHEN  (x:0–462, y:0–300)
             // ══════════════════════════════════════
             { id: 'nw_fridge', x: 20, y: 20, width: 60, height: 100, texture: 'assets/fridge.png', label: 'Fridge', solid: true, dialogue: ['* A large fridge humming quietly.', '* The door is slightly ajar.'] },
-            { id: 'nw_oven', x: 180, y: 20, width: 70, height: 60, texture: 'assets/oven.png', label: 'Oven', solid: true, dialogue: ['* A dusty oven with a broken door.', '* It seems to be stuck shut.', '* Maybe there is something inside?'] },
-            { id: 'nw_washing_machine', x: 300, y: 20, width: 70, height: 60, texture: 'assets/washing_machine.png', label: 'Washing Machine', solid: true, dialogue: ['* An old washing machine.'] },
+            { id: 'nw_oven', x: 200, y: 20, width: 90, height: 80, texture: 'assets/oven.png', label: 'Oven', solid: true, dialogue: ['* A dusty oven with a broken door.', '* It seems to be stuck shut.', '* Maybe there is something inside?'] },
+            { id: 'nw_washing_machine', x: 300, y: 20, width: 90, height: 80, texture: 'assets/washing_machine.png', label: 'Washing Machine', solid: true, dialogue: ['* An old washing machine.'] },
+            {id: 'nw_sink_kitchen', x: 105, y: 20, width: 90, height: 80, texture: 'assets/kitchen_sink.png', label: 'Kitchen Sink', solid: true, dialogue: ['* A kitchen sink with a rusty faucet.', '* The cabinet below is slightly open.'] },
             {
                 id: 'nw_cabinet', x: 380, y: 170, width: 80, height: 100, texture: 'assets/cabinet.png', label: 'Kitchen Cabinet', solid: true,
                 dialogue: ['* A tall kitchen cabinet with glass doors.'],
@@ -744,7 +745,7 @@
         // Player
         function getSpawnPosition() { try { const from = sessionStorage.getItem('looping_rooms_entry_door'); if (from === 'north') return { x: 1084, y: 60 }; if (from === 'south') return { x: 1084, y: 1508 }; if (from === 'west') return { x: 60, y: 784 }; if (from === 'east') return { x: 2108, y: 784 }; } catch (e) { } return { x: 1084, y: 784 }; }
         const _spawn = getSpawnPosition();
-        const player = { x: _spawn.x, y: _spawn.y, width: 45, height: 45, velocityX: 0, velocityY: 0, speed: 5 };
+        const player = { x: _spawn.x, y: _spawn.y, width: 45, height: 45, velocityX: 0, velocityY: 0, speed: 7 };
         const camera = { x: player.x, y: player.y, zoom: 1.4 };
 
 
@@ -1215,8 +1216,8 @@
             const T = 48; // tile size
 
             // ── CORRIDOR (cross, dark checkerboard) ──
-            drawCheckerboard(0, CORR_Y1, W, CORR_Y2 - CORR_Y1, '#1a1a1a', '#222222', T);
-            drawCheckerboard(CORR_X1, 0, CORR_X2 - CORR_X1, H, '#1a1a1a', '#222222', T);
+            drawCheckerboard(0, CORR_Y1, W, CORR_Y2 - CORR_Y1, '#1a1a1a', '#', T);
+            drawCheckerboard(CORR_X1, 0, CORR_X2 - CORR_X1, H, '#1a1a1a', '#', T);
             ctx.strokeStyle = '#333'; ctx.lineWidth = 2;
             ctx.strokeRect(0, CORR_Y1, W, CORR_Y2 - CORR_Y1);
             ctx.strokeRect(CORR_X1, 0, CORR_X2 - CORR_X1, H);
@@ -1246,7 +1247,7 @@
             // Living Room
             const NW_LIV_X = NW_NARROW_ROOM_W, NW_LIV_Y = NW_SPLIT_Y;
             const NW_LIV_W = CORR_X1 - NW_NARROW_ROOM_W, NW_LIV_H = CORR_Y1 - NW_SPLIT_Y;
-            drawCheckerboard(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H, '#f4f4f4', '#e0e0e0', T);
+            drawCheckerboard(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H, '#bca89f', '#e0e0e0', T);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H);
             drawRoomOverlay(ROOMS.find(r => r.id === 'nw_living'));
@@ -1263,14 +1264,14 @@
             ctx.strokeRect(NE_SPLIT_X, 0, W - NE_SPLIT_X, NE_SPLIT_Y);
             drawRoomOverlay(ROOMS.find(r => r.id === 'ne_bathroom'));
             // Living room (bottom)
-            drawCheckerboard(CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y, '#f4f4f4', '#e0e0e0', T);
+            drawCheckerboard(CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y, '#bca89f', '#e0e0e0', T);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y);
             drawRoomOverlay(ROOMS.find(r => r.id === 'ne_living'));
 
             // ── SW APARTMENT ──
             // Living room (top)
-            drawCheckerboard(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2, '#f4f4f4', '#e0e0e0', T);
+            drawCheckerboard(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2, '#bca89f', '#e0e0e0', T);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2);
             drawRoomOverlay(ROOMS.find(r => r.id === 'sw_living'));
@@ -1287,7 +1288,7 @@
 
             // ── SE APARTMENT ──
             // Living room (top)
-            drawCheckerboard(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2, '#f4f4f4', '#e0e0e0', T);
+            drawCheckerboard(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2, '#bca89f', '#e0e0e0', T);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2);
             drawRoomOverlay(ROOMS.find(r => r.id === 'se_living'));
