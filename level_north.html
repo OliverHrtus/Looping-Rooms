@@ -1188,8 +1188,8 @@
             const T = 48; // tile size
 
             // ── CORRIDOR (cross, dark checkerboard) ──
-            drawCheckerboard(0, CORR_Y1, W, CORR_Y2 - CORR_Y1, '#1a1a1a', '#222222', T);
-            drawCheckerboard(CORR_X1, 0, CORR_X2 - CORR_X1, H, '#1a1a1a', '#222222', T);
+            drawCheckerboard(0, CORR_Y1, W, CORR_Y2 - CORR_Y1, '#1a1a1a', '#', T);
+            drawCheckerboard(CORR_X1, 0, CORR_X2 - CORR_X1, H, '#1a1a1a', '#', T);
             ctx.strokeStyle = '#333'; ctx.lineWidth = 2;
             ctx.strokeRect(0, CORR_Y1, W, CORR_Y2 - CORR_Y1);
             ctx.strokeRect(CORR_X1, 0, CORR_X2 - CORR_X1, H);
@@ -1219,7 +1219,7 @@
             // Living Room
             const NW_LIV_X = NW_NARROW_ROOM_W, NW_LIV_Y = NW_SPLIT_Y;
             const NW_LIV_W = CORR_X1 - NW_NARROW_ROOM_W, NW_LIV_H = CORR_Y1 - NW_SPLIT_Y;
-            drawCheckerboard(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H, '#f4f4f4', '#e0e0e0', T);
+            ctx.fillStyle = '#bca89f'; ctx.fillRect(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H);
             drawRoomOverlay(ROOMS.find(r => r.id === 'nw_living'));
@@ -1236,14 +1236,14 @@
             ctx.strokeRect(NE_SPLIT_X, 0, W - NE_SPLIT_X, NE_SPLIT_Y);
             drawRoomOverlay(ROOMS.find(r => r.id === 'ne_bathroom'));
             // Living room (bottom)
-            drawCheckerboard(CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y, '#f4f4f4', '#e0e0e0', T);
+            ctx.fillStyle = '#bca89f'; ctx.fillRect(CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y);
             drawRoomOverlay(ROOMS.find(r => r.id === 'ne_living'));
 
             // ── SW APARTMENT ──
             // Living room (top)
-            drawCheckerboard(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2, '#f4f4f4', '#e0e0e0', T);
+            ctx.fillStyle = '#bca89f'; ctx.fillRect(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2);
             drawRoomOverlay(ROOMS.find(r => r.id === 'sw_living'));
@@ -1260,7 +1260,7 @@
 
             // ── SE APARTMENT ──
             // Living room (top)
-            drawCheckerboard(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2, '#f4f4f4', '#e0e0e0', T);
+            ctx.fillStyle = '#bca89f'; ctx.fillRect(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2);
             drawRoomOverlay(ROOMS.find(r => r.id === 'se_living'));
