@@ -1200,8 +1200,44 @@
         }
         const W12 = 12;
 
-        function updatePlayer() { if (noteOpen || lockboxOpen || isTransitioning || dialogueOpen) return; player.velocityX = 0; player.velocityY = 0; if (keys['KeyA'] || keys['ArrowLeft']) player.velocityX = -player.speed; if (keys['KeyD'] || keys['ArrowRight']) player.velocityX = player.speed; if (keys['KeyW'] || keys['ArrowUp']) player.velocityY = -player.speed; if (keys['KeyS'] || keys['ArrowDown']) player.velocityY = player.speed; if (player.velocityX && player.velocityY) { player.velocityX *= 0.707; player.velocityY *= 0.707; } player.x += player.velocityX * deltaTime; player.y += player.velocityY * deltaTime; clampPlayerToWorld(); }
-        function updateCamera() { const lerp = 0.2 * deltaTime; camera.x += (player.x + player.width / 2 - camera.x) * lerp; camera.y += (player.y + player.height / 2 - camera.y) * lerp; const INV_OFFSET = 76; const halfW = (canvas.width / 2) / camera.zoom, halfH = (canvas.height / 2 - INV_OFFSET / 2) / camera.zoom; camera.x = Math.max(halfW, Math.min(W - halfW, camera.x)); camera.y = Math.max(halfH, Math.min(H - halfH, camera.y)); }
+ function updatePlayer() {
+            if (noteOpen || lockboxOpen || isTransitioning || dialogueOpen) return;
+            player.velocityX = 0; player.velocityY = 0;
+            if (keys['KeyA'] || keys['ArrowLeft']) player.velocityX = -player.speed;
+            if (keys['KeyD'] || keys['ArrowRight']) player.velocityX = player.speed;
+            if (keys['KeyW'] || keys['ArrowUp']) player.velocityY = -player.speed;
+            if (keys['KeyS'] || keys['ArrowDown']) player.velocityY = player.speed;
+            if (player.velocityX && player.velocityY) { player.velocityX *= 0.707; player.velocityY *= 0.707; }
+
+            
+            if (Math.abs(player.velocityY) >= Math.abs(player.velocityX)) {
+                if (player.velocityY < 0) player.facing = 'up';
+                else if (player.velocityY > 0) player.facing = 'down';
+            }
+            if (Math.abs(player.velocityX) > Math.abs(player.velocityY)) {
+                if (player.velocityX < 0) player.facing = 'left';
+                else if (player.velocityX > 0) player.facing = 'right';
+            }
+
+            
+            player.moving = (player.velocityX !== 0 || player.velocityY !== 0);
+            if (player.moving) {
+                player.animTimer += deltaTime;
+                if (player.animTimer >= player.animSpeed) {
+                    player.animTimer = 0;
+                    player.animFrame = 1 - player.animFrame; 
+                }
+                player.idleTimer = 0;
+            } else {
+                player.animFrame = 0;
+                player.animTimer = 0;
+                player.idleTimer += deltaTime;
+            }
+
+            player.x += player.velocityX * deltaTime;
+            player.y += player.velocityY * deltaTime;
+            clampPlayerToWorld();
+        }        function updateCamera() { const lerp = 0.2 * deltaTime; camera.x += (player.x + player.width / 2 - camera.x) * lerp; camera.y += (player.y + player.height / 2 - camera.y) * lerp; const INV_OFFSET = 76; const halfW = (canvas.width / 2) / camera.zoom, halfH = (canvas.height / 2 - INV_OFFSET / 2) / camera.zoom; camera.x = Math.max(halfW, Math.min(W - halfW, camera.x)); camera.y = Math.max(halfH, Math.min(H - halfH, camera.y)); }
         function updateDoorAnims() { for (let d of APT_DOORS) { if (d.isOpen && d.openAnim < 1) d.openAnim = Math.min(1, d.openAnim + 0.06 * deltaTime); if (!d.isOpen && d.openAnim > 0) d.openAnim = Math.max(0, d.openAnim - 0.06 * deltaTime); } }
 
         
@@ -1766,6 +1802,7 @@
             ctx.fillStyle = '#111'; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             updatePlayer();
+            updateSpriteAnim(deltaTime / 60);
             updateCamera();
             updateDoorAnims();
             updateDoorLogic();
