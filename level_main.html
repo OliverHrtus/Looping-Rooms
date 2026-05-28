@@ -412,20 +412,7 @@
 <body>
     <canvas id="gameCanvas"></canvas>
 
-    <div id="game-timer" style="
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        font-family: 'VT323', monospace;
-        font-size: 32px;
-        color: #ffffff;
-        background: rgba(20, 20, 20, 0.8);
-        padding: 6px 16px;
-        border: 2px solid #555;
-        border-radius: 6px;
-        z-index: 100;
-        pointer-events: none;
-    ">Timer: Off (Press T) (Press R to reset)</div>
+    
 
 
     <div id="inventory">
@@ -752,11 +739,7 @@
         function saveWorldItemState() { try { const s = {}; texturedObjects.forEach(i => { if (i.collected) s[i.id] = true; }); sessionStorage.setItem('looping_rooms_world_items', JSON.stringify(s)); } catch (e) { } }
         function loadWorldItemState() { try { const raw = sessionStorage.getItem('looping_rooms_world_items'); if (!raw) return; const s = JSON.parse(raw); texturedObjects.forEach(i => { if (s[i.id]) i.collected = true; }); } catch (e) { } }
 
-        // ── TIMER CORE VARIABLES ──
-        let timerActive = false;
-        let timerStartTime = 0;
-        let timerElapsedTime = 0; // Tracks elapsed time in milliseconds
-        const timerEl = document.getElementById('game-timer');
+        
 
         // Player
         function getSpawnPosition() { try { const from = sessionStorage.getItem('looping_rooms_entry_door'); if (from === 'north') return { x: 1084, y: 60 }; if (from === 'south') return { x: 1084, y: 1508 }; if (from === 'west') return { x: 60, y: 784 }; if (from === 'east') return { x: 2108, y: 784 }; } catch (e) { } return { x: 1084, y: 784 }; }
@@ -823,28 +806,7 @@
                 }
             }
 
-            // Listen for keybind trigger 'T' to toggle start/pause
-            if (e.code === 'KeyT') {
-                if (!timerActive) {
-                    timerActive = true;
-                    timerStartTime = performance.now() - timerElapsedTime;
-                } else {
-                    timerActive = false;
-                }
-            }
-
-            // ── NEW: PRESS 'R' TO RESET THE TIMER ──
-            if (e.code === 'KeyR') {
-                timerActive = false;       // Stop the countdown clock
-                timerElapsedTime = 0;      // Reset elapsed milliseconds to 0
-                timerStartTime = performance.now(); // Rewind timestamp anchors
-
-                // Reset the text on screen back to zeros instantly
-                if (timerEl) {
-                    timerEl.textContent = "Time: 00:00.00";
-                    timerEl.style.borderColor = '#555555'; // Return border to default grey
-                }
-            }
+            
         }
         );
         document.addEventListener('keyup', e => keys[e.code] = false);
@@ -1561,31 +1523,8 @@
 
 
         function gameLoop(currentTime) {
-            // ── UPDATE TIMING PROCESSING ──
-            if (timerActive) {
-                // Calculate time passed since hitting start using currentTime
-                timerElapsedTime = currentTime - timerStartTime;
-
-                // Format total milliseconds into minutes, seconds, and centiseconds
-                const totalSeconds = timerElapsedTime / 1000;
-                const minutes = Math.floor(totalSeconds / 60);
-                const seconds = Math.floor(totalSeconds % 60);
-                const centiseconds = Math.floor((timerElapsedTime % 1000) / 10);
-
-                // Pad numbers with leading zeros for arcade-style display text
-                const minStr = String(minutes).padStart(2, '0');
-                const secStr = String(seconds).padStart(2, '0');
-                const msStr = String(centiseconds).padStart(2, '0');
-
-                timerEl.textContent = `Time: ${minStr}:${secStr}.${msStr}`;
-                timerEl.style.borderColor = '#ff3333'; // Changes color when running
-            } else if (timerElapsedTime > 0) {
-                // Display text style behavior when paused
-                timerEl.style.borderColor = '#555555';
-            }
-
             // ── ENGINE DELTA TIME CALCULATIONS ──
-            deltaTime = (currentTime - lastTime) / (1000 / 60);
+            deltaTime = (currentTime - lastTime) / (1000 / 60);    
             lastTime = currentTime;
             deltaTime = Math.min(deltaTime, 3);
 
