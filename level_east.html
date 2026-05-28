@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Looping Rooms</title>
+    <link rel="icon" type="image/png" href="assets/logo.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -630,7 +631,7 @@
             {
                 id: 'nw_desk', x: 810, y: 220, width: 100, height: 60, texture: 'assets/desk.png', label: 'Desk', solid: true,
                 dialogue: ['* A wooden desk.', '* The top drawer is slightly open.', '* Inside, you find a note...'],
-                containsItem: { id: 'note_desk', icon: '📝', texture: 'assets/note.png', label: '1# Note', dialogue: ['* A handwritten note with the number "6" scribbled on it.', '* It might be a clue for something.'] }, itemTaken: false
+              
             },
             { id: 'nw_dresser', x: 850, y: 35, width: 40, height: 100, texture: 'assets/dresser.png', label: 'Dresser', solid: true, dialogue: ['* A tall dresser with several drawers.'] },
 
@@ -650,7 +651,7 @@
             { id: 'nw_couch', x: 380, y: 520, width: 160, height: 65, texture: 'assets/couch.png', label: 'Couch', solid: true, dialogue: ['* A comfortable couch.', '* There is a small book on the seat.'] },
             {
                 id: 'nw_liqor_cabinet', x: 815, y: 310, width: 80, height: 100, solid: true, texture: 'assets/liqor_cabinet.png', label: 'Liquor Cabinet',
-                isCustomPuzzle: true, requiresItem: 'key_liqor', unlocked: false, itemTaken: false,
+                isCustomPuzzle: true, requiresItem: 'key_liquor', unlocked: false, itemTaken: false,
                 containsItem: { id: 'small_screwdriver', icon: '🪛', label: 'Small Screwdriver' },
                 dialogue: ['* A liquor cabinet filled with dusty bottles.', '* The glass doors are locked.', '* You can see a small screwdriver lying on one of the shelves.']
             },
@@ -662,8 +663,8 @@
             { id: 'ne_bed', x: 1360, y: 10, width: 150, height: 115, texture: 'assets/bed.png', label: 'Bed', solid: true, dialogue: ['* A neatly made bed.', '* The sheets are crisp and white.'] },
             {
                 id: 'ne_dresser', x: 1690, y: 15, width: 40, height: 100, texture: 'assets/dresser.png', label: 'Dresser', solid: true,
-                dialogue: ['* A tall dresser.', '* Inside you spot something shiny buried under the clothes.'],
-                containsItem: { id: 'key_lockbox', icon: '🔑', texture: 'assets/key.png', label: 'Lockbox Key' }, itemTaken: false
+                dialogue: ['* A tall dresser.'],
+               
             },
             { id: 'ne_desk', x: 1300, y: 220,width: 100, height: 60, texture: 'assets/desk.png', label: 'Desk', solid: true, dialogue: ['* A wooden desk.', '* Papers are scattered across the surface.'] },
 
@@ -671,7 +672,7 @@
             // NE BATHROOM  (x:1737–2200, y:0–300)
             // ══════════════════════════════════════
             { id: 'ne_sink', x: 1840, y: 15, width: 80, height: 60, texture: 'assets/sink.png', label: 'Sink', solid: true, dialogue: ['* A bathroom sink with a mirror above it.', '* The faucet drips occasionally.'] },
-            { id: 'ne_shower', x: 2025, y: 10, width: 110, height: 75, texture: 'assets/shower.png', label: 'Shower', solid: true, dialogue: ['* A shower stall.', '* The tiles are cracked.'] },
+            { id: 'ne_shower', x: 2025, y: 10, width: 110, height: 75, texture: 'assets/shower.png', label: 'Shower', solid: true, containsItem: { id: 'key_liquor', icon: '🔑', label: 'Liquor Cabinet Key' }, dialogue: ['* A shower stall.', '* A shiny object catches your eye.'] },
             { id: 'ne_toilet', x: 1750, y: 185, width: 90, height: 80, texture: 'assets/toilet.png', label: 'Toilet', solid: true, dialogue: ['* A simple toilet.'] },
 
             // ══════════════════════════════════════
@@ -682,8 +683,6 @@
             { id: 'ne_couch', x: 1610, y: 520, width: 160, height: 65, texture: 'assets/couch.png', label: 'Couch', solid: true, dialogue: ['* A long couch facing the TV.'] },
             {
                 id: 'ne_liqor_cabinet', x: 1800, y: 320, width: 80, height: 100, solid: true, texture: 'assets/liqor_cabinet.png', label: 'Liquor Cabinet',
-                isCustomPuzzle: true, requiresItem: 'key_liqor', unlocked: false, itemTaken: false,
-                containsItem: { id: 'small_screwdriver', icon: '🪛', label: 'Small Screwdriver' },
                 dialogue: ['* A liquor cabinet filled with dusty bottles.', '* The glass doors are locked.']
             },
 
@@ -691,15 +690,15 @@
             // NE PUZZLE ITEMS
             // ══════════════════════════════════════
             {
-                id: 'puzzle_vent', x: 1680, y: 250, width: 35, height: 35, texture: 'assets/vent.png', label: 'Loose Wall Vent', solid: true,
+                id: 'puzzle_vent', x: 20, y: 250, width: 35, height: 35, texture: 'assets/vent.png', label: 'Loose Wall Vent', solid: true,
                 isCustomPuzzle: true, requiresItem: 'small_screwdriver', unlocked: false, itemTaken: false,
-                containsItem: { id: 'key_north', icon: '🔑', label: 'North Key' },
+                containsItem: { id: '4# Note', icon: '📝', label: 'Note #4', dialogue: ['* A handwritten note with the number "8" scribbled on it.'] },
                 dialogue: ['* A ventilation grate set low in the wall.', '* The flathead screws are loose, but your fingernails cannot turn them.']
             },
             {
                 id: 'puzzle_lockbox', x: 1310, y: 540, width: 40, height: 40, texture: 'assets/small_box.png', label: 'Lock Box', solid: true,
-                isCustomPuzzle: true, requiresItem: 'key_lockbox', unlocked: false, itemTaken: false,
-                containsItem: { id: 'key_liqor', icon: '🔑', label: 'Liquor Cabinet Key' },
+                isCustomPuzzle: true, requiresItem: 'east_lockbox_key', unlocked: false, itemTaken: false,
+                containsItem: { id: '3# Note', icon: '📝', label: 'Note #3', dialogue: ['* A handwritten note with the number "5" scribbled on it.', '* PS. Look for a key in a place that not a single league of legends players eyes have ever seen.' ] },
                 dialogue: ['* A small wooden box with a sturdy brass padlock.', '* It needs a specific key to open.']
             },
         ];
@@ -720,7 +719,7 @@
         // Player
         function getSpawnPosition() { try { const from = sessionStorage.getItem('looping_rooms_entry_door'); if (from === 'north') return { x: 1084, y: 60 }; if (from === 'south') return { x: 1084, y: 1508 }; if (from === 'west') return { x: 60, y: 784 }; if (from === 'east') return { x: 2108, y: 784 }; } catch (e) { } return { x: 1084, y: 784 }; }
         const _spawn = getSpawnPosition();
-        const player = { x: 2120, y: 780, width: 45, height: 45, velocityX: 0, velocityY: 0, speed: 5 };
+        const player = { x: 50, y: 780, width: 45, height: 45, velocityX: 0, velocityY: 0, speed: 5 };
         const camera = { x: player.x, y: player.y, zoom: 1.4 };
 
         // Which apt is player in?
@@ -1170,14 +1169,7 @@
             }
         }
 
-        function drawRoomLabel(text, x, y, w, h, color) {
-            ctx.save();
-            ctx.font = 'bold 18px monospace';
-            ctx.fillStyle = color || 'rgba(255,255,255,0.18)';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(text, x + w / 2, y + h / 2);
-            ctx.restore();
-        }
+        
 
         function drawWallSegment(x, y, w, h, color, glowColor) {
             ctx.fillStyle = color || '#333';
@@ -1216,7 +1208,6 @@
             drawCheckerboard(0, 0, NW_SPLIT_X, NW_SPLIT_Y, '#f4e8e8', '#e8c8c8', T);
             ctx.strokeStyle = 'rgba(180,100,100,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(0, 0, NW_SPLIT_X, NW_SPLIT_Y);
-            drawRoomLabel('KITCHEN', 0, 0, NW_SPLIT_X, NW_SPLIT_Y, 'rgba(160,80,80,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'nw_kitchen'));
 
             // New Room (below kitchen)
@@ -1224,14 +1215,12 @@
             drawCheckerboard(0, NW_SPLIT_Y, NW_NARROW_ROOM_W, NW_ROOM_H, '#e8eef4', '#c8d8e8', T);
             ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(0, NW_SPLIT_Y, NW_NARROW_ROOM_W, NW_ROOM_H);
-            drawRoomLabel('ROOM', 0, NW_SPLIT_Y, NW_NARROW_ROOM_W, NW_ROOM_H, 'rgba(80,120,160,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'nw_newroom'));
 
             // Bedroom
             drawCheckerboard(NW_SPLIT_X, 0, CORR_X1 - NW_SPLIT_X, NW_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
             ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(NW_SPLIT_X, 0, CORR_X1 - NW_SPLIT_X, NW_SPLIT_Y);
-            drawRoomLabel('BEDROOM', NW_SPLIT_X, 0, CORR_X1 - NW_SPLIT_X, NW_SPLIT_Y, 'rgba(60,130,60,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'nw_bedroom'));
 
             // Living Room
@@ -1240,7 +1229,6 @@
             drawCheckerboard(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H, '#f4f4f4', '#e0e0e0', T);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H);
-            drawRoomLabel('LIVING ROOM', NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H, 'rgba(80,80,80,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'nw_living'));
 
             // ── NE APARTMENT ──
@@ -1248,19 +1236,16 @@
             drawCheckerboard(CORR_X2, 0, NE_SPLIT_X - CORR_X2, NE_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
             ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(CORR_X2, 0, NE_SPLIT_X - CORR_X2, NE_SPLIT_Y);
-            drawRoomLabel('BEDROOM', CORR_X2, 0, NE_SPLIT_X - CORR_X2, NE_SPLIT_Y, 'rgba(60,130,60,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'ne_bedroom'));
             // Bathroom (top-right)
             drawCheckerboard(NE_SPLIT_X, 0, W - NE_SPLIT_X, NE_SPLIT_Y, '#e8eef4', '#c8d8e8', T);
             ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(NE_SPLIT_X, 0, W - NE_SPLIT_X, NE_SPLIT_Y);
-            drawRoomLabel('BATHROOM', NE_SPLIT_X, 0, W - NE_SPLIT_X, NE_SPLIT_Y, 'rgba(80,120,160,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'ne_bathroom'));
             // Living room (bottom)
             drawCheckerboard(CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y, '#f4f4f4', '#e0e0e0', T);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y);
-            drawRoomLabel('LIVING ROOM', CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y, 'rgba(80,80,80,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'ne_living'));
 
             // ── SW APARTMENT ──
@@ -1268,19 +1253,16 @@
             drawCheckerboard(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2, '#f4f4f4', '#e0e0e0', T);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2);
-            drawRoomLabel('LIVING ROOM', 0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2, 'rgba(80,80,80,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'sw_living'));
             // Bathroom (bottom-left)
             drawCheckerboard(0, SW_SPLIT_Y, SW_SPLIT_X, H - SW_SPLIT_Y, '#e8eef4', '#c8d8e8', T);
             ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(0, SW_SPLIT_Y, SW_SPLIT_X, H - SW_SPLIT_Y);
-            drawRoomLabel('BATHROOM', 0, SW_SPLIT_Y, SW_SPLIT_X, H - SW_SPLIT_Y, 'rgba(80,120,160,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'sw_bathroom'));
             // Bedroom (bottom-right)
             drawCheckerboard(SW_SPLIT_X, SW_SPLIT_Y, CORR_X1 - SW_SPLIT_X, H - SW_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
             ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(SW_SPLIT_X, SW_SPLIT_Y, CORR_X1 - SW_SPLIT_X, H - SW_SPLIT_Y);
-            drawRoomLabel('BEDROOM', SW_SPLIT_X, SW_SPLIT_Y, CORR_X1 - SW_SPLIT_X, H - SW_SPLIT_Y, 'rgba(60,130,60,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'sw_bedroom'));
 
             // ── SE APARTMENT ──
@@ -1288,19 +1270,16 @@
             drawCheckerboard(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2, '#f4f4f4', '#e0e0e0', T);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2);
-            drawRoomLabel('LIVING ROOM', CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2, 'rgba(80,80,80,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'se_living'));
             // Bedroom (bottom-left)
             drawCheckerboard(CORR_X2, SE_SPLIT_Y, SE_SPLIT_X - CORR_X2, H - SE_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
             ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(CORR_X2, SE_SPLIT_Y, SE_SPLIT_X - CORR_X2, H - SE_SPLIT_Y);
-            drawRoomLabel('BEDROOM', CORR_X2, SE_SPLIT_Y, SE_SPLIT_X - CORR_X2, H - SE_SPLIT_Y, 'rgba(60,130,60,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'se_bedroom'));
             // Bathroom (bottom-right)
             drawCheckerboard(SE_SPLIT_X, SE_SPLIT_Y, W - SE_SPLIT_X, H - SE_SPLIT_Y, '#e8eef4', '#c8d8e8', T);
             ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(SE_SPLIT_X, SE_SPLIT_Y, W - SE_SPLIT_X, H - SE_SPLIT_Y);
-            drawRoomLabel('BATHROOM', SE_SPLIT_X, SE_SPLIT_Y, W - SE_SPLIT_X, H - SE_SPLIT_Y, 'rgba(80,120,160,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'se_bathroom'));
 
             // ── OUTER WALLS (thick black) ──
@@ -1348,14 +1327,16 @@
 
             // ── EXIT DOORS ──
             exitDoors.forEach(d => {
-                const hasKey = inventory.some(s => s && (s.id === 'key_' + d.id || s.baseId === 'key_' + d.id));
-                const cx = d.x + d.w / 2, cy = d.y + d.h / 2;
-                ctx.fillStyle = hasKey ? '#1a2e1a' : '#2e1a1a'; ctx.fillRect(d.x, d.y, d.w, d.h);
-                ctx.shadowColor = hasKey ? '#44ff66' : '#ff4444'; ctx.shadowBlur = 14;
-                ctx.strokeStyle = hasKey ? '#44cc55' : '#cc4444'; ctx.lineWidth = 3; ctx.strokeRect(d.x, d.y, d.w, d.h);
-                ctx.shadowBlur = 0; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillStyle = hasKey ? '#aaffbb' : '#ffaaaa';
-                ctx.fillText(hasKey ? '🔓' : '🔒', cx, cy - 6); ctx.font = 'bold 9px monospace'; ctx.fillText(d.label, cx, cy + 7);
+                    const hasKey = inventory.some(s => s && (s.id === 'key_' + d.id || s.baseId === 'key_' + d.id));
+                    // Treat the main exit as accessible (green) even if player lacks a key
+                    const accessible = hasKey || d.id === 'main';
+                    const cx = d.x + d.w / 2, cy = d.y + d.h / 2;
+                    ctx.fillStyle = accessible ? '#1a2e1a' : '#2e1a1a'; ctx.fillRect(d.x, d.y, d.w, d.h);
+                    ctx.shadowColor = accessible ? '#44ff66' : '#ff4444'; ctx.shadowBlur = 14;
+                    ctx.strokeStyle = accessible ? '#44cc55' : '#cc4444'; ctx.lineWidth = 3; ctx.strokeRect(d.x, d.y, d.w, d.h);
+                    ctx.shadowBlur = 0; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillStyle = accessible ? '#aaffbb' : '#ffaaaa';
+                    ctx.fillText(accessible ? '🔓' : '🔒', cx, cy - 6); ctx.font = 'bold 9px monospace'; ctx.fillText(d.label, cx, cy + 7);
                 ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
             });
         }
@@ -1399,13 +1380,13 @@
             const anim = door.openAnim;
             if (anim < 1) {
                 const mid = dY + dH / 2, halfH = (dH / 2) * (1 - anim);
-                ctx.shadowColor = '#7755cc'; ctx.shadowBlur = 12 * (1 - anim);
-                ctx.fillStyle = `rgba(100,60,180,${0.9 - anim * 0.8})`;
+                ctx.shadowColor = '#6b3f1f'; ctx.shadowBlur = 12 * (1 - anim);
+                ctx.fillStyle = `rgba(135,90,45,${0.9 - anim * 0.8})`;
                 if (halfH > 0.5) {
                     ctx.fillRect(wallX, dY, W12, halfH);
                     ctx.fillRect(wallX, mid + (dH / 2) * anim, W12, halfH);
                 }
-                ctx.strokeStyle = `rgba(180,120,255,${1 - anim})`; ctx.lineWidth = 1.5;
+                ctx.strokeStyle = `rgba(170,110,70,${1 - anim})`; ctx.lineWidth = 1.5;
                 if (halfH > 0.5) {
                     ctx.strokeRect(wallX, dY, W12, halfH);
                     ctx.strokeRect(wallX, mid + (dH / 2) * anim, W12, halfH);
@@ -1413,7 +1394,7 @@
                 ctx.shadowBlur = 0;
             }
             // Door frame outline
-            ctx.strokeStyle = `rgba(160,100,255,${0.5 * (1 - anim) + 0.1})`; ctx.lineWidth = 2;
+            ctx.strokeStyle = `rgba(150,95,60,${0.5 * (1 - anim) + 0.1})`; ctx.lineWidth = 2;
             ctx.strokeRect(wallX - 1, dY, W12 + 2, dH);
         }
 

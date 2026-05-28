@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Looping Rooms - Main Menu</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
   <style>
     * {
       margin: 0;
@@ -24,7 +25,6 @@
       position: relative;
     }
 
-    /* Animated background */
     body::before {
       content: '';
       position: fixed;
@@ -149,31 +149,6 @@
       transform: translateX(0);
     }
 
-    .menu-button-shine {
-      position: relative;
-      overflow: hidden;
-    }
-
-    .menu-button-shine::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg,
-          transparent,
-          rgba(255, 255, 255, 0.3),
-          transparent);
-      transition: left 0.5s ease;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    .menu-button-shine:hover::before {
-      left: 100%;
-    }
-
     .menu-button:hover {
       background: linear-gradient(135deg,
           rgba(200, 200, 200, 0.4) 0%,
@@ -209,6 +184,166 @@
       font-size: 14px;
       z-index: 1;
     }
+
+    /* ── CONTROLS MODAL BACKDROP ── */
+    #controls-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    #controls-backdrop.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── CONTROLS WINDOW ── */
+    #controls-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.88);
+      width: 480px;
+      background: #0d0d0d;
+      border: 2px solid #ffffff;
+      box-shadow:
+        0 0 0 1px #000,
+        0 0 30px rgba(255, 255, 255, 0.15),
+        inset 0 0 40px rgba(255, 255, 255, 0.03);
+      z-index: 51;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    #controls-modal.open {
+      opacity: 1;
+      pointer-events: all;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* Title bar */
+    .modal-titlebar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-bottom: 1px solid #333;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .modal-titlebar span {
+      font-family: 'Georgia', serif;
+      font-size: 13px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #ccc;
+    }
+
+    .modal-close {
+      background: none;
+      border: 1px solid #555;
+      color: #aaa;
+      width: 26px;
+      height: 26px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-family: monospace;
+    }
+
+    .modal-close:hover {
+      border-color: #fff;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Controls body */
+    .modal-body {
+      padding: 28px 32px 32px;
+    }
+
+    .controls-section {
+      margin-bottom: 24px;
+    }
+
+    .controls-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .controls-section-title {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #666;
+      font-family: monospace;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #222;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+    }
+
+    .control-label {
+      font-family: 'Georgia', serif;
+      font-size: 14px;
+      color: #bbb;
+    }
+
+    .control-keys {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 28px;
+      padding: 0 8px;
+      background: #1a1a1a;
+      border: 1px solid #444;
+      border-bottom: 3px solid #333;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #ddd;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .key-sep {
+      color: #555;
+      font-size: 11px;
+      font-family: monospace;
+    }
+
+    .modal-footer {
+      padding: 12px 32px;
+      border-top: 1px solid #1e1e1e;
+      text-align: right;
+    }
+
+    .modal-footer span {
+      font-size: 11px;
+      color: #444;
+      font-family: monospace;
+      letter-spacing: 1px;
+    }
   </style>
 </head>
 
@@ -221,16 +356,108 @@
     </div>
 
     <div class="menu">
-      <button class="menu-button" onclick="window.location.href='level_main.html'">Start Game</button>
-      <button class="menu-button">Options</button>
-      <button class="menu-button">Achievements</button>
-      <button class="menu-button">Extras</button>
+      <button class="menu-button" onclick="window.location.href='level_main.html'">Play</button>
+      <button class="menu-button" onclick="openControls()">Controls</button>
       <button class="menu-button">Quit Game</button>
     </div>
   </div>
 
   <div class="version">v.Alpha</div>
   <div class="footer">Created by OliFil Studio</div>
+
+  <!-- CONTROLS MODAL -->
+  <div id="controls-backdrop" onclick="closeControls()"></div>
+
+  <div id="controls-modal">
+    <div class="modal-titlebar">
+      <span>Controls</span>
+      <button class="modal-close" onclick="closeControls()">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="controls-section">
+        <div class="controls-section-title">Movement</div>
+        <div class="control-row">
+          <span class="control-label">Move</span>
+          <div class="control-keys">
+            <span class="key">W</span>
+            <span class="key">A</span>
+            <span class="key">S</span>
+            <span class="key">D</span>
+            <span class="key-sep">or</span>
+            <span class="key">↑</span>
+            <span class="key">←</span>
+            <span class="key">↓</span>
+            <span class="key">→</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-section">
+        <div class="controls-section-title">Interaction</div>
+        <div class="control-row">
+          <span class="control-label">Interact / Confirm</span>
+          <div class="control-keys">
+            <span class="key">E</span>
+            <span class="key-sep">or</span>
+            <span class="key">Z</span>
+          </div>
+        </div>
+        <div class="control-row">
+          <span class="control-label">Open door</span>
+          <div class="control-keys">
+            <span class="key">E</span>
+          </div>
+        </div>
+        <div class="control-row">
+          <span class="control-label">Drop held item</span>
+          <div class="control-keys">
+            <span class="key">G</span>
+          </div>
+        </div>
+        <div class="control-row">
+          <span class="control-label">Close dialogue / Menu</span>
+          <div class="control-keys">
+            <span class="key">ESC</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-section">
+        <div class="controls-section-title">Inventory</div>
+        <div class="control-row">
+          <span class="control-label">Select slot</span>
+          <div class="control-keys">
+            <span class="key">1</span>
+            <span class="key">-</span>
+            <span class="key">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-section">
+        <div class="controls-section-title">Timer</div>
+        <div class="control-row">
+          <span class="control-label">Start / Pause timer</span>
+          <div class="control-keys">
+            <span class="key">T</span>
+          </div>
+        </div>
+        <div class="control-row">
+          <span class="control-label">Reset timer</span>
+          <div class="control-keys">
+            <span class="key">R</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <span>Press ESC to close</span>
+    </div>
+  </div>
 
   <audio id="bgMusic" loop>
     <source src="Music/Hollow Knight OST - Title Theme.mp3" type="audio/mpeg">
@@ -240,10 +467,23 @@
     let musicStarted = false;
     document.addEventListener('click', () => {
       if (!musicStarted) {
-        const bgMusic = document.getElementById('bgMusic');
-        bgMusic.play().catch(e => console.log('Audio play failed:', e));
+        document.getElementById('bgMusic').play().catch(() => { });
         musicStarted = true;
       }
+    });
+
+    function openControls() {
+      document.getElementById('controls-backdrop').classList.add('open');
+      document.getElementById('controls-modal').classList.add('open');
+    }
+
+    function closeControls() {
+      document.getElementById('controls-backdrop').classList.remove('open');
+      document.getElementById('controls-modal').classList.remove('open');
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Escape') closeControls();
     });
   </script>
 </body>

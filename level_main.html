@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Looping Rooms</title>
+    <link rel="icon" type="image/png" href="assets/logo.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -504,12 +505,13 @@
         const dialogueText = document.getElementById('dialogue-text');
         const dialogueHint = document.getElementById('dialogue-hint');
         let dialogueOpen = false, dialoguePages = [], dialoguePage = 0;
+        let dialogueCloseCallback = null;
         let typewriterTimer = null, typewriterDone = false, typewriterChars = 0;
         const TYPEWRITER_SPEED = 28;
-        function openDialogue(pages) { if (!pages || !pages.length) return; dialoguePages = pages; dialoguePage = 0; dialogueOpen = true; dialoguePanel.classList.add('visible'); showPage(0); }
+        function openDialogue(pages, onClose = null) { if (!pages || !pages.length) return; dialoguePages = pages; dialoguePage = 0; dialogueOpen = true; dialogueCloseCallback = onClose; dialoguePanel.classList.add('visible'); showPage(0); }
         function showPage(idx) { const text = dialoguePages[idx] || ''; dialogueText.textContent = ''; typewriterChars = 0; typewriterDone = false; clearInterval(typewriterTimer); const isLast = idx >= dialoguePages.length - 1; dialogueHint.textContent = isLast ? '[ E / Z  to close ]' : '[ E / Z  to continue ]'; typewriterTimer = setInterval(() => { typewriterChars++; dialogueText.textContent = text.slice(0, typewriterChars); if (typewriterChars >= text.length) { clearInterval(typewriterTimer); typewriterDone = true; const cursor = document.createElement('span'); cursor.id = 'dialogue-cursor'; dialogueText.appendChild(cursor); } }, TYPEWRITER_SPEED); }
         function advanceDialogue() { if (!dialogueOpen) return; if (!typewriterDone) { clearInterval(typewriterTimer); typewriterDone = true; dialogueText.textContent = dialoguePages[dialoguePage]; const cursor = document.createElement('span'); cursor.id = 'dialogue-cursor'; dialogueText.appendChild(cursor); return; } dialoguePage++; if (dialoguePage >= dialoguePages.length) { closeDialogue(); } else { showPage(dialoguePage); } }
-        function closeDialogue() { clearInterval(typewriterTimer); dialogueOpen = false; dialoguePanel.classList.remove('visible'); dialogueText.textContent = ''; }
+        function closeDialogue() { clearInterval(typewriterTimer); dialogueOpen = false; dialoguePanel.classList.remove('visible'); dialogueText.textContent = ''; if (typeof dialogueCloseCallback === 'function') { const callback = dialogueCloseCallback; dialogueCloseCallback = null; callback(); } }
 
         // ════════════════════════════════════════════════════════════
         // WORLD LAYOUT
@@ -574,7 +576,25 @@
         const lbNumEls = [document.getElementById('dn0'), document.getElementById('dn1'), document.getElementById('dn2'), document.getElementById('dn3')];
         function lbChangeDigit(idx, dir) { lbDigits[idx] = (lbDigits[idx] + dir + 10) % 10; lbNumEls[idx].textContent = lbDigits[idx]; const msg = document.getElementById('lb-msg'); msg.textContent = ''; msg.className = 'lb-msg'; }
         document.querySelectorAll('.digit-slot').forEach((slot, idx) => { const arrows = slot.querySelectorAll('.d-arrow'); arrows[0].addEventListener('click', () => lbChangeDigit(idx, 1)); arrows[1].addEventListener('click', () => lbChangeDigit(idx, -1)); });
-        document.getElementById('lb-unlock-btn').addEventListener('click', () => { const msg = document.getElementById('lb-msg'); if (lbDigits.join('') === LOCK_CODE) { msg.textContent = '✓ Unlocked!'; msg.className = 'lb-msg success'; document.getElementById('lb-icon').textContent = '📭'; if (currentLockbox) currentLockbox.unlocked = true; addToInventory({ id: 'key_exit', icon: '🪪', texture: 'assets/exit_card.png', label: 'Exit Card', count: 1 }); setTimeout(closeLockbox, 1200); } else { msg.textContent = '✗ Wrong code'; msg.className = 'lb-msg error'; } });
+        document.getElementById('lb-unlock-btn').addEventListener('click', () => {
+            const msg = document.getElementById('lb-msg');
+            if (lbDigits.join('') === LOCK_CODE) {
+                msg.textContent = '✓ Unlocked!';
+                msg.className = 'lb-msg success';
+                document.getElementById('lb-icon').textContent = '📭';
+                if (currentLockbox) {
+                    currentLockbox.unlocked = true;
+                    if (!currentLockbox.itemTaken) {
+                        currentLockbox.itemTaken = true;
+                        addToInventory({ id: 'key_exit', icon: '🪪', texture: 'assets/exit_card.png', label: 'Exit Card', count: 1 });
+                    }
+                }
+                setTimeout(closeLockbox, 1200);
+            } else {
+                msg.textContent = '✗ Wrong code';
+                msg.className = 'lb-msg error';
+            }
+        });
 
         // ════════════════════════════════════════════════════════════
         // INVENTORY
@@ -587,6 +607,29 @@
         function addToInventory(item) { for (let i = 0; i < INVENTORY_SIZE; i++) { if (inventory[i] && inventory[i].id === item.id) { inventory[i].count++; renderInventory(); saveInventory(); return true; } } for (let i = 0; i < INVENTORY_SIZE; i++) { if (!inventory[i]) { inventory[i] = { ...item, count: 1 }; renderInventory(); saveInventory(); return true; } } return false; }
         let activeItemLabelTimer = null;
         function renderInventory() { for (let i = 0; i < INVENTORY_SIZE; i++) { document.getElementById(`slot-${i}`).classList.toggle('active', i === activeSlot); const iconSlot = document.getElementById(`icon-${i}`); iconSlot.innerHTML = ''; if (inventory[i]) { const img = inventory[i].texture ? _texCache[inventory[i].texture] : null; if (img && img.complete && img.naturalWidth > 0) { const imgEl = document.createElement('img'); imgEl.src = inventory[i].texture; iconSlot.appendChild(imgEl); } else { iconSlot.textContent = inventory[i].icon; } } document.getElementById(`count-${i}`).textContent = inventory[i] && inventory[i].count > 1 ? inventory[i].count : ''; } const el = document.getElementById('active-item-label'); clearTimeout(activeItemLabelTimer); if (inventory[activeSlot]) { const item = inventory[activeSlot]; el.textContent = item.count > 1 ? `${item.icon} ${item.label} x${item.count}` : `${item.icon} ${item.label}`; el.classList.add('visible'); activeItemLabelTimer = setTimeout(() => el.classList.remove('visible'), 2500); } else { el.classList.remove('visible'); } }
+
+        function getActiveInventoryItem() { return inventory[activeSlot]; }
+
+        function readActiveInventoryNote() {
+            if (noteOpen || lockboxOpen || isTransitioning || dialogueOpen) return false;
+            const item = getActiveInventoryItem();
+            if (!item) return false;
+
+            // Build pages from dialogue array first, then fall back to noteTitle/noteContent
+            let pages = [];
+
+            if (item.dialogue && item.dialogue.length > 0) {
+                pages = [...item.dialogue];
+            } else if (item.noteTitle || item.noteContent) {
+                if (item.noteTitle) pages.push(`* ${item.noteTitle}`);
+                if (item.noteContent) pages.push(`* ${item.noteContent}`);
+            }
+
+            if (!pages.length) return false;
+
+            openDialogue(pages);
+            return true;
+        }
 
         // ════════════════════════════════════════════════════════════
         // CANVAS & GAME OBJECTS
@@ -601,13 +644,13 @@
             // ══════════════════════════════════════
             // NW KITCHEN  (x:0–462, y:0–300)
             // ══════════════════════════════════════
-            { id: 'nw_fridge', x: 20, y: 20, width: 60, height: 100, texture: 'assets/fridge.png', label: 'Fridge', solid: true, dialogue: ['* A large fridge humming quietly.', '* The door is slightly ajar.', '* Inside, you see a faint glint of something metallic.'] },
+            { id: 'nw_fridge', x: 20, y: 20, width: 60, height: 100, texture: 'assets/fridge.png', label: 'Fridge', solid: true, dialogue: ['* A large fridge humming quietly.', '* The door is slightly ajar.'] },
             { id: 'nw_oven', x: 180, y: 20, width: 70, height: 60, texture: 'assets/oven.png', label: 'Oven', solid: true, dialogue: ['* A dusty oven with a broken door.', '* It seems to be stuck shut.', '* Maybe there is something inside?'] },
             { id: 'nw_washing_machine', x: 300, y: 20, width: 70, height: 60, texture: 'assets/washing_machine.png', label: 'Washing Machine', solid: true, dialogue: ['* An old washing machine.'] },
             {
                 id: 'nw_cabinet', x: 380, y: 170, width: 80, height: 100, texture: 'assets/cabinet.png', label: 'Kitchen Cabinet', solid: true,
-                dialogue: ['* A tall kitchen cabinet with glass doors.', '* Behind one of the containers, you notice a small key.'],
-                containsItem: { id: 'key_lockbox', icon: '🔑', texture: 'assets/key.png', label: 'Lockbox Key' }, itemTaken: false
+                dialogue: ['* A tall kitchen cabinet with glass doors.'],
+
             },
 
             // ══════════════════════════════════════
@@ -618,7 +661,7 @@
             {
                 id: 'nw_desk', x: 810, y: 220, width: 100, height: 60, texture: 'assets/desk.png', label: 'Desk', solid: true,
                 dialogue: ['* A wooden desk.', '* The top drawer is slightly open.', '* Inside, you find a note...'],
-                containsItem: { id: 'note_desk', icon: '📝', texture: 'assets/note.png', label: '1# Note', dialogue: ['* A handwritten note with the number "6" scribbled on it.', '* It might be a clue for something.'] }, itemTaken: false
+                containsItem: { id: '1# Note', icon: '📝', texture: 'assets/note.png', label: 'Note 1#', dialogue: ['* A handwritten note with the number "6" scribbled on it.', '* It might be a clue for something.'] }, itemTaken: false
             },
             { id: 'nw_dresser', x: 850, y: 35, width: 40, height: 100, texture: 'assets/dresser.png', label: 'Dresser', solid: true, dialogue: ['* A tall dresser with several drawers.'] },
 
@@ -628,19 +671,28 @@
             { id: 'nw_sink', x: 145, y: 330, width: 80, height: 60, texture: 'assets/sink.png', label: 'Sink', solid: true, dialogue: ['* A bathroom sink with a mirror above it.', '* The faucet drips occasionally.'] },
             { id: 'nw_toilet', x: 10, y: 450, width: 60, height: 60, texture: 'assets/toilet.png', label: 'Toilet', solid: true, dialogue: ['* A simple toilet.'] },
             { id: 'nw_shower', x: 30, y: 530, width: 60, height: 60, texture: 'assets/shower.png', label: 'Shower', solid: true, dialogue: ['* A shower stall with a glass door.', '* The tiles are cracked and moldy.'] },
-            { id: 'nw_mirror', x: 250, y: 530, width: 60, height: 60, texture: 'assets/mirror.png', label: 'Mirror', solid: true, dialogue: ['* A large wall mirror.', '* You notice something odd about the corners.'] },
+            {
+                id: 'nw_mirror', x: 250, y: 530, width: 60, height: 60, texture: 'assets/mirror.png', label: 'Mirror', solid: true,
+                isCustomPuzzle: true, requiresItem: 'hammer', unlocked: false, itemTaken: false,
+                dialogue: ['* A large wall mirror.', '* You have an urge to hit it with a hammer.'],
+                containsItem: { id: 'key_west', icon: '🔑', label: 'West Key' },
+            },
 
             // ══════════════════════════════════════
             // NW LIVING ROOM  (x:240–925, y:300–613)
             // ══════════════════════════════════════
-            { id: 'nw_tv', x: 370, y: 318, width: 180, height: 80, texture: 'assets/tv.png', label: 'TV', solid: true, dialogue: ['* A modern TV.', '* It is plugged in and seems to be working.'] },
+            {
+                id: 'nw_tv', x: 370, y: 318, width: 180, height: 80, texture: 'assets/tv.png', label: 'TV', solid: true,
+                dialogue: ['* A modern TV.', 'Under it you see a metal object.'],
+                containsItem: { id: 'key_liquor', icon: '🔑', label: 'Liquor Cabinet Key' },
+
+            },
             { id: 'nw_rug', x: 370, y: 430, width: 100, height: 55, solid: false, texture: 'assets/rug.png', label: 'Rug', dialogue: ['* A faded rug with an intricate pattern.'] },
             { id: 'nw_couch', x: 380, y: 520, width: 160, height: 65, texture: 'assets/couch.png', label: 'Couch', solid: true, dialogue: ['* A comfortable couch.', '* There is a small book on the seat.'] },
             {
                 id: 'nw_liqor_cabinet', x: 815, y: 310, width: 80, height: 100, solid: true, texture: 'assets/liqor_cabinet.png', label: 'Liquor Cabinet',
-                isCustomPuzzle: true, requiresItem: 'key_liqor', unlocked: false, itemTaken: false,
-                containsItem: { id: 'small_screwdriver', icon: '🪛', label: 'Small Screwdriver' },
-                dialogue: ['* A liquor cabinet filled with dusty bottles.', '* The glass doors are locked.', '* You can see a small screwdriver lying on one of the shelves.']
+
+                dialogue: ['* A liquor cabinet filled with dusty bottles.']
             },
 
             // ══════════════════════════════════════
@@ -650,8 +702,8 @@
             { id: 'ne_bed', x: 1360, y: 10, width: 150, height: 115, texture: 'assets/bed.png', label: 'Bed', solid: true, dialogue: ['* A neatly made bed.', '* The sheets are crisp and white.'] },
             {
                 id: 'ne_dresser', x: 1690, y: 15, width: 40, height: 100, texture: 'assets/dresser.png', label: 'Dresser', solid: true,
-                dialogue: ['* A tall dresser.', '* Inside you spot something shiny buried under the clothes.'],
-                containsItem: { id: 'key_lockbox', icon: '🔑', texture: 'assets/key.png', label: 'Lockbox Key' }, itemTaken: false
+                dialogue: ['* A tall dresser.'],
+
             },
             { id: 'ne_desk', x: 1300, y: 220, width: 100, height: 60, texture: 'assets/desk.png', label: 'Desk', solid: true, dialogue: ['* A wooden desk.', '* Papers are scattered across the surface.'] },
 
@@ -670,7 +722,7 @@
             { id: 'ne_couch', x: 1610, y: 520, width: 160, height: 65, texture: 'assets/couch.png', label: 'Couch', solid: true, dialogue: ['* A long couch facing the TV.'] },
             {
                 id: 'ne_liqor_cabinet', x: 1800, y: 320, width: 80, height: 100, solid: true, texture: 'assets/liqor_cabinet.png', label: 'Liquor Cabinet',
-                isCustomPuzzle: true, requiresItem: 'key_liqor', unlocked: false, itemTaken: false,
+                isCustomPuzzle: true, requiresItem: 'key_liquor', unlocked: false, itemTaken: false,
                 containsItem: { id: 'small_screwdriver', icon: '🪛', label: 'Small Screwdriver' },
                 dialogue: ['* A liquor cabinet filled with dusty bottles.', '* The glass doors are locked.']
             },
@@ -681,23 +733,20 @@
             {
                 id: 'puzzle_vent', x: 1680, y: 250, width: 35, height: 35, texture: 'assets/vent.png', label: 'Loose Wall Vent', solid: true,
                 isCustomPuzzle: true, requiresItem: 'small_screwdriver', unlocked: false, itemTaken: false,
-                containsItem: { id: 'key_north', icon: '🔑', label: 'North Key' },
+                containsItem: { id: 'hammer', icon: '🔨', label: 'Hammer' },
                 dialogue: ['* A ventilation grate set low in the wall.', '* The flathead screws are loose, but your fingernails cannot turn them.']
             },
             {
                 id: 'puzzle_lockbox', x: 1310, y: 540, width: 40, height: 40, texture: 'assets/small_box.png', label: 'Lock Box', solid: true,
-                isCustomPuzzle: true, requiresItem: 'key_lockbox', unlocked: false, itemTaken: false,
-                containsItem: { id: 'key_liqor', icon: '🔑', label: 'Liquor Cabinet Key' },
-                dialogue: ['* A small wooden box with a sturdy brass padlock.', '* It needs a specific key to open.']
+                isLockbox: true, unlocked: false, itemTaken: false,
+
+                dialogue: ['* A small wooden box with a numeric lock.', '* It needs a specific number combination to open.']
             },
         ];
 
         const _texCache = {};
         function loadTextures() { for (const obj of texturedObjects) { if (obj.texture && !_texCache[obj.texture]) { const img = new Image(); img.src = obj.texture; _texCache[obj.texture] = img; } } }
         loadTextures();
-
-
-
 
 
         function saveWorldItemState() { try { const s = {}; texturedObjects.forEach(i => { if (i.collected) s[i.id] = true; }); sessionStorage.setItem('looping_rooms_world_items', JSON.stringify(s)); } catch (e) { } }
@@ -712,9 +761,8 @@
         // Player
         function getSpawnPosition() { try { const from = sessionStorage.getItem('looping_rooms_entry_door'); if (from === 'north') return { x: 1084, y: 60 }; if (from === 'south') return { x: 1084, y: 1508 }; if (from === 'west') return { x: 60, y: 784 }; if (from === 'east') return { x: 2108, y: 784 }; } catch (e) { } return { x: 1084, y: 784 }; }
         const _spawn = getSpawnPosition();
-        const player = { x: _spawn.x, y: _spawn.y, width: 45, height: 60, velocityX: 0, velocityY: 0, speed: 5 };
+        const player = { x: _spawn.x, y: _spawn.y, width: 45, height: 45, velocityX: 0, velocityY: 0, speed: 5 };
         const camera = { x: player.x, y: player.y, zoom: 1.4 };
-
 
 
         // Which apt is player in?
@@ -725,19 +773,12 @@
             const curApt = getPlayerApt();
             if (curApt !== lastPlayerApt) {
                 // Close old apt door
-                if (lastPlayerApt) { const d = APT_DOORS.find(d => d.aptId === lastPlayerApt); if (d) { d.isOpen = false; d.openAnim = 0; } }
+                if (lastPlayerApt) { const d = APT_DOORS.find(d => d.aptId === lastPlayerApt); if (d) d.isOpen = false; }
                 // Open new apt door unless it is restricted
                 if (curApt) {
                     const d = APT_DOORS.find(d => d.aptId === curApt);
-                    if (d) {
-                        if (d.restricted) {
-                            d.isOpen = false;
-                            d.openAnim = 0;
-                            showDoorMsg('Restricted Area!');
-                        } else {
-                            d.isOpen = true;
-                        }
-                    }
+                    if (d && !d.restricted) d.isOpen = true;
+                    if (d && d.restricted) showDoorMsg('Restricted Area!');
                 }
                 lastPlayerApt = curApt;
             }
@@ -775,6 +816,12 @@
             }
             if (e.code === 'KeyE') tryInteract();
             if (e.code === 'KeyG') dropActiveItem();
+            if (e.code === 'KeyQ') {
+                if (readActiveInventoryNote()) {
+                    e.preventDefault();
+                    return;
+                }
+            }
 
             // Listen for keybind trigger 'T' to toggle start/pause
             if (e.code === 'KeyT') {
@@ -802,7 +849,6 @@
         );
         document.addEventListener('keyup', e => keys[e.code] = false);
         window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
-
         // ════════════════════════════════════════════════════════════
         // INTERACTION
         // ════════════════════════════════════════════════════════════
@@ -837,9 +883,6 @@
             { id: 'se_bathroom', x: SE_SPLIT_X, y: SE_SPLIT_Y, w: W - SE_SPLIT_X, h: H - SE_SPLIT_Y },
         ];
 
-        // Rooms that should have black walls with an outer glow effect
-        const DARK_WALL_ROOMS = ['nw_newroom'];
-
         // Returns the room the player center is currently inside, or null (corridor)
         function getPlayerRoom() {
             const px = player.x + player.width / 2;
@@ -871,28 +914,61 @@
         function getNearbyDroppedItem() { const reach = 55; for (let item of droppedItems) { if (item.collected) continue; const dx = (player.x + player.width / 2) - (item.x + item.width / 2), dy = (player.y + player.height / 2) - (item.y + item.height / 2); if (Math.abs(dx) < reach && Math.abs(dy) < reach) return item; } return null; }
         function getNearExitDoor() { const reach = 70; for (let d of exitDoors) { const dx = (player.x + player.width / 2) - (d.x + d.w / 2), dy = (player.y + player.height / 2) - (d.y + d.h / 2); if (Math.abs(dx) < reach && Math.abs(dy) < reach) return d; } return null; }
         function getNearAptDoor() { const reach = 60; for (let d of APT_DOORS) { const dx = (player.x + player.width / 2) - (d.x + d.w / 2), dy = (player.y + player.height / 2) - (d.y + d.h / 2); if (Math.abs(dx) < reach && Math.abs(dy) < reach) return d; } return null; }
-        function getNearTexturedObject() { const reach = 70; for (const obj of texturedObjects) { if (!obj.isNote && !obj.isLockbox && obj.collected) continue; const dx = (player.x + player.width / 2) - (obj.x + obj.width / 2), dy = (player.y + player.height / 2) - (obj.y + obj.height / 2); if (Math.abs(dx) < reach && Math.abs(dy) < reach) return obj; } return null; }
+        function getNearTexturedObject() {
+            const reach = 70;
+            for (const obj of texturedObjects) {
+                if (obj.noInteract) continue;
+                if (!obj.isNote && !obj.isLockbox && obj.collected) continue;
+                const dx = (player.x + player.width / 2) - (obj.x + obj.width / 2);
+                const dy = (player.y + player.height / 2) - (obj.y + obj.height / 2);
+                if (Math.abs(dx) < reach && Math.abs(dy) < reach) return obj;
+            }
+            return null;
+        }
 
         const doorMsgEl = document.getElementById('door-msg');
         let doorMsgTimer = null;
         function showDoorMsg(text) { doorMsgEl.textContent = text; doorMsgEl.classList.add('visible'); clearTimeout(doorMsgTimer); doorMsgTimer = setTimeout(() => doorMsgEl.classList.remove('visible'), 2200); }
         function hasItem(id) { return inventory.some(s => s && (s.id === id || s.baseId === id)); }
 
+        function collectNoteObject(obj) {
+            if (!obj || !obj.isNote || obj.collected) return;
+            if (!inventory.some(slot => slot && slot.id === obj.id)) {
+                const added = addToInventory({
+                    id: obj.id,
+                    icon: obj.icon,
+                    texture: obj.texture,
+                    label: obj.label,
+                    isNote: true,
+                    noteTitle: obj.noteTitle,
+                    noteContent: obj.noteContent,
+                    dialogue: obj.dialogue,
+                });
+                if (!added) return;
+            }
+            obj.collected = true;
+            saveInventory();
+            saveWorldItemState();
+        }
+
         function dropActiveItem() { if (noteOpen || lockboxOpen || isTransitioning || dialogueOpen) return; const slot = inventory[activeSlot]; if (!slot) return; const itemW = slot.isLockbox ? 50 : 28, itemH = slot.isLockbox ? 50 : 28; const dropped = { id: slot.id + '_drop_' + (dropIdCounter++), baseId: slot.id, icon: slot.icon, label: slot.label, texture: slot.texture, x: player.x + player.width / 2 - itemW / 2, y: player.y + player.height / 2 - itemH / 2, width: itemW, height: itemH, collected: false, isDropped: true, isNote: slot.isNote || false, noteTitle: slot.noteTitle, noteContent: slot.noteContent, isLockbox: slot.isLockbox || false, unlocked: slot.unlocked || false, isDoorKey: slot.isDoorKey || false, doorId: slot.doorId, IsPuzzleItem: true }; droppedItems.push(dropped); if (slot.count > 1) { slot.count--; } else { inventory[activeSlot] = null; } renderInventory(); saveInventory(); feedbacks.push({ text: `- ${slot.label}`, x: player.x + 16, y: player.y - 10, alpha: 1.0, vy: -0.5, color: '#ff8888' }); }
 
         function tryInteract() {
             if (dialogueOpen) { advanceDialogue(); return; }
             const nearExit = getNearExitDoor();
-            if (nearExit) { const keyId = 'key_' + nearExit.id; if (hasItem(keyId)) { fadeToLevel(`level_${nearExit.id}.html`, nearExit.id); } else { showDoorMsg(`Need the ${nearExit.id.charAt(0).toUpperCase() + nearExit.id.slice(1)} Key`); } return; }
+            if (nearExit) {
+                const keyId = 'key_' + nearExit.id;
+                if (nearExit.id === 'main' || hasItem(keyId)) {
+                    fadeToLevel(`level_${nearExit.id}.html`, nearExit.id);
+                } else {
+                    showDoorMsg(`Need the ${nearExit.id.charAt(0).toUpperCase() + nearExit.id.slice(1)} Key`);
+                }
+                return;
+            }
             // Apt door toggle
             const nearApt = getNearAptDoor();
             if (nearApt) {
-                if (nearApt.restricted) {
-                    nearApt.isOpen = false;
-                    nearApt.openAnim = 0;
-                    showDoorMsg('Restricted Area!');
-                    return;
-                }
+                if (nearApt.restricted) { showDoorMsg('Restricted Area!'); return; }
                 nearApt.isOpen = !nearApt.isOpen;
                 return;
             }
@@ -902,10 +978,12 @@
             if (nearTex) {
                 // 1. Handle Notes
                 if (nearTex.isNote) {
+                    const collectAndSave = () => collectNoteObject(nearTex);
                     if (nearTex.dialogue && nearTex.dialogue.length > 0 && !dialogueOpen) {
-                        openDialogue(nearTex.dialogue);
+                        openDialogue(nearTex.dialogue, collectAndSave);
                     } else {
                         openNote(nearTex);
+                        collectAndSave();
                     }
                     return;
                 }
@@ -913,7 +991,7 @@
                 // 2. Handle Lockboxes
                 if (nearTex.isLockbox) {
                     if (nearTex.dialogue && nearTex.dialogue.length > 0 && !dialogueOpen) {
-                        openDialogue(nearTex.dialogue);
+                        openDialogue(nearTex.dialogue, () => openLockbox(nearTex));
                     } else {
                         openLockbox(nearTex);
                     }
@@ -963,7 +1041,12 @@
                 if (nearTex.containsItem && !nearTex.itemTaken) {
                     if (nearTex.dialogue && nearTex.dialogue.length > 0 && !nearTex._dialogueSeen) {
                         nearTex._dialogueSeen = true;
-                        openDialogue(nearTex.dialogue);
+                        openDialogue(nearTex.dialogue, () => {
+                            if (addToInventory(nearTex.containsItem)) {
+                                nearTex.itemTaken = true;
+                                feedbacks.push({ text: `+ ${nearTex.containsItem.label}`, x: player.x + 16, y: player.y - 10, alpha: 1.0, vy: -0.5, color: '#ffd700' });
+                            }
+                        });
                         return;
                     }
 
@@ -997,7 +1080,6 @@
                 return;
             }
         }
-
         // ════════════════════════════════════════════════════════════
         // PHYSICS / WALLS
         // ════════════════════════════════════════════════════════════
@@ -1056,9 +1138,11 @@
             wall(0, CORR_Y2, CORR_X1, W12);                   // SW living top edge
             wall(CORR_X2, CORR_Y2, W - CORR_X2, W12);         // SE living top edge
 
+            // Explicit static walls for the textured object layout
             wall(130, 300, 100, 10); // textured_obj_14
             wall(230, 300, 10, 105); // textured_obj_15
             wall(230, 496, 10, 105); // textured_obj_16
+
 
 
             for (const w of getTexturedObjectWalls()) walls.push(w);
@@ -1143,14 +1227,7 @@
             }
         }
 
-        function drawRoomLabel(text, x, y, w, h, color) {
-            ctx.save();
-            ctx.font = 'bold 18px monospace';
-            ctx.fillStyle = color || 'rgba(255,255,255,0.18)';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(text, x + w / 2, y + h / 2);
-            ctx.restore();
-        }
+
 
         function drawWallSegment(x, y, w, h, color, glowColor) {
             ctx.fillStyle = color || '#333';
@@ -1189,7 +1266,6 @@
             drawCheckerboard(0, 0, NW_SPLIT_X, NW_SPLIT_Y, '#f4e8e8', '#e8c8c8', T);
             ctx.strokeStyle = 'rgba(180,100,100,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(0, 0, NW_SPLIT_X, NW_SPLIT_Y);
-            drawRoomLabel('KITCHEN', 0, 0, NW_SPLIT_X, NW_SPLIT_Y, 'rgba(160,80,80,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'nw_kitchen'));
 
             // New Room (below kitchen)
@@ -1197,14 +1273,12 @@
             drawCheckerboard(0, NW_SPLIT_Y, NW_NARROW_ROOM_W, NW_ROOM_H, '#e8eef4', '#c8d8e8', T);
             ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(0, NW_SPLIT_Y, NW_NARROW_ROOM_W, NW_ROOM_H);
-            drawRoomLabel('ROOM', 0, NW_SPLIT_Y, NW_NARROW_ROOM_W, NW_ROOM_H, 'rgba(80,120,160,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'nw_newroom'));
 
             // Bedroom
             drawCheckerboard(NW_SPLIT_X, 0, CORR_X1 - NW_SPLIT_X, NW_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
             ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(NW_SPLIT_X, 0, CORR_X1 - NW_SPLIT_X, NW_SPLIT_Y);
-            drawRoomLabel('BEDROOM', NW_SPLIT_X, 0, CORR_X1 - NW_SPLIT_X, NW_SPLIT_Y, 'rgba(60,130,60,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'nw_bedroom'));
 
             // Living Room
@@ -1213,7 +1287,6 @@
             drawCheckerboard(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H, '#f4f4f4', '#e0e0e0', T);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H);
-            drawRoomLabel('LIVING ROOM', NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H, 'rgba(80,80,80,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'nw_living'));
 
             // ── NE APARTMENT ──
@@ -1221,19 +1294,16 @@
             drawCheckerboard(CORR_X2, 0, NE_SPLIT_X - CORR_X2, NE_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
             ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(CORR_X2, 0, NE_SPLIT_X - CORR_X2, NE_SPLIT_Y);
-            drawRoomLabel('BEDROOM', CORR_X2, 0, NE_SPLIT_X - CORR_X2, NE_SPLIT_Y, 'rgba(60,130,60,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'ne_bedroom'));
             // Bathroom (top-right)
             drawCheckerboard(NE_SPLIT_X, 0, W - NE_SPLIT_X, NE_SPLIT_Y, '#e8eef4', '#c8d8e8', T);
             ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(NE_SPLIT_X, 0, W - NE_SPLIT_X, NE_SPLIT_Y);
-            drawRoomLabel('BATHROOM', NE_SPLIT_X, 0, W - NE_SPLIT_X, NE_SPLIT_Y, 'rgba(80,120,160,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'ne_bathroom'));
             // Living room (bottom)
             drawCheckerboard(CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y, '#f4f4f4', '#e0e0e0', T);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y);
-            drawRoomLabel('LIVING ROOM', CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y, 'rgba(80,80,80,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'ne_living'));
 
             // ── SW APARTMENT ──
@@ -1241,19 +1311,16 @@
             drawCheckerboard(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2, '#f4f4f4', '#e0e0e0', T);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2);
-            drawRoomLabel('LIVING ROOM', 0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2, 'rgba(80,80,80,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'sw_living'));
             // Bathroom (bottom-left)
             drawCheckerboard(0, SW_SPLIT_Y, SW_SPLIT_X, H - SW_SPLIT_Y, '#e8eef4', '#c8d8e8', T);
             ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(0, SW_SPLIT_Y, SW_SPLIT_X, H - SW_SPLIT_Y);
-            drawRoomLabel('BATHROOM', 0, SW_SPLIT_Y, SW_SPLIT_X, H - SW_SPLIT_Y, 'rgba(80,120,160,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'sw_bathroom'));
             // Bedroom (bottom-right)
             drawCheckerboard(SW_SPLIT_X, SW_SPLIT_Y, CORR_X1 - SW_SPLIT_X, H - SW_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
             ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(SW_SPLIT_X, SW_SPLIT_Y, CORR_X1 - SW_SPLIT_X, H - SW_SPLIT_Y);
-            drawRoomLabel('BEDROOM', SW_SPLIT_X, SW_SPLIT_Y, CORR_X1 - SW_SPLIT_X, H - SW_SPLIT_Y, 'rgba(60,130,60,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'sw_bedroom'));
 
             // ── SE APARTMENT ──
@@ -1261,19 +1328,16 @@
             drawCheckerboard(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2, '#f4f4f4', '#e0e0e0', T);
             ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2);
-            drawRoomLabel('LIVING ROOM', CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2, 'rgba(80,80,80,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'se_living'));
             // Bedroom (bottom-left)
             drawCheckerboard(CORR_X2, SE_SPLIT_Y, SE_SPLIT_X - CORR_X2, H - SE_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
             ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(CORR_X2, SE_SPLIT_Y, SE_SPLIT_X - CORR_X2, H - SE_SPLIT_Y);
-            drawRoomLabel('BEDROOM', CORR_X2, SE_SPLIT_Y, SE_SPLIT_X - CORR_X2, H - SE_SPLIT_Y, 'rgba(60,130,60,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'se_bedroom'));
             // Bathroom (bottom-right)
             drawCheckerboard(SE_SPLIT_X, SE_SPLIT_Y, W - SE_SPLIT_X, H - SE_SPLIT_Y, '#e8eef4', '#c8d8e8', T);
             ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
             ctx.strokeRect(SE_SPLIT_X, SE_SPLIT_Y, W - SE_SPLIT_X, H - SE_SPLIT_Y);
-            drawRoomLabel('BATHROOM', SE_SPLIT_X, SE_SPLIT_Y, W - SE_SPLIT_X, H - SE_SPLIT_Y, 'rgba(80,120,160,0.35)');
             drawRoomOverlay(ROOMS.find(r => r.id === 'se_bathroom'));
 
             // ── OUTER WALLS (thick black) ──
@@ -1372,13 +1436,13 @@
             const anim = door.openAnim;
             if (anim < 1) {
                 const mid = dY + dH / 2, halfH = (dH / 2) * (1 - anim);
-                ctx.shadowColor = '#7755cc'; ctx.shadowBlur = 12 * (1 - anim);
-                ctx.fillStyle = `rgba(100,60,180,${0.9 - anim * 0.8})`;
+                ctx.shadowColor = '#6b3f1f'; ctx.shadowBlur = 12 * (1 - anim);
+                ctx.fillStyle = `rgba(135,90,45,${0.9 - anim * 0.8})`;
                 if (halfH > 0.5) {
                     ctx.fillRect(wallX, dY, W12, halfH);
                     ctx.fillRect(wallX, mid + (dH / 2) * anim, W12, halfH);
                 }
-                ctx.strokeStyle = `rgba(180,120,255,${1 - anim})`; ctx.lineWidth = 1.5;
+                ctx.strokeStyle = `rgba(170,110,70,${1 - anim})`; ctx.lineWidth = 1.5;
                 if (halfH > 0.5) {
                     ctx.strokeRect(wallX, dY, W12, halfH);
                     ctx.strokeRect(wallX, mid + (dH / 2) * anim, W12, halfH);
@@ -1386,10 +1450,9 @@
                 ctx.shadowBlur = 0;
             }
             // Door frame outline
-            ctx.strokeStyle = `rgba(160,100,255,${0.5 * (1 - anim) + 0.1})`; ctx.lineWidth = 2;
+            ctx.strokeStyle = `rgba(150,95,60,${0.5 * (1 - anim) + 0.1})`; ctx.lineWidth = 2;
             ctx.strokeRect(wallX - 1, dY, W12 + 2, dH);
         }
-
 
         function drawSingleItem(item, bobY) {
             const cx = item.x + item.width / 2, cy = bobY + item.height / 2;
@@ -1420,13 +1483,20 @@
                 }
 
                 // If the item has already been collected, do not draw it
-                if (!obj.isNote && !obj.isLockbox && obj.collected) continue;
+                if (obj.collected) continue;
 
                 // Render the object or animated puzzle piece
                 if (obj.IsPuzzleItem) {
                     const idx = texturedObjects.indexOf(obj);
                     drawSingleItem(obj, obj.y + Math.sin(t + idx * 1.3) * 4);
                 } else {
+                    // If this textured object has been forced to be a wall, draw it like a wall
+                    const forcedWallIds = ['textured_obj_14', 'textured_obj_15', 'textured_obj_16'];
+                    if (forcedWallIds.includes(obj.id)) {
+                        // Use solid black with a faint outer glow to match wall visuals
+                        drawWallSegment(obj.x, obj.y, obj.width, obj.height, '#000000', 'rgba(200,200,200,0.4)');
+                        continue;
+                    }
                     const img = obj.texture ? _texCache[obj.texture] : null;
                     if (img && img.complete && img.naturalWidth > 0) {
                         ctx.drawImage(img, obj.x, obj.y, obj.width, obj.height);
@@ -1473,33 +1543,9 @@
         }
 
         function drawPlayer() {
-            const cx = player.x + player.width / 2;
-            const cy = player.y + player.height / 2;
-
-            // Update facing direction from velocity
-            if (player.velocityY > 0) playerFacing = 'down';
-            else if (player.velocityY < 0) playerFacing = 'up';
-            else if (player.velocityX < 0) playerFacing = 'left';
-            else if (player.velocityX > 0) playerFacing = 'right';
-
-            const img = _texCache['assets/player.png'];
-
-            if (img && img.complete && img.naturalWidth > 0) {
-                // Draw first frame (static sprite)
-                ctx.drawImage(img,
-                    0, 0, player.width, player.height,
-                    player.x, player.y, player.width, player.height
-                );
-            } else {
-                // Fallback circle if sprite hasn't loaded yet
-                ctx.fillStyle = '#e05555';
-                ctx.beginPath();
-                ctx.arc(cx, cy, player.width / 2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = '#ff8888';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
+            const cx = player.x + player.width / 2, cy = player.y + player.height / 2;
+            ctx.fillStyle = '#e05555'; ctx.beginPath(); ctx.arc(cx, cy, player.width / 2, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#ff8888'; ctx.lineWidth = 2; ctx.stroke();
         }
 
         function drawFeedbacks() {
