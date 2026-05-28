@@ -412,7 +412,20 @@
 <body>
     <canvas id="gameCanvas"></canvas>
 
-    
+    <div id="game-timer" style="
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        font-family: 'VT323', monospace;
+        font-size: 32px;
+        color: #ffffff;
+        background: rgba(20, 20, 20, 0.8);
+        padding: 6px 16px;
+        border: 2px solid #555;
+        border-radius: 6px;
+        z-index: 100;
+        pointer-events: none;
+    ">Timer: Off (Press T) (Press R to reset)</div>
 
 
     <div id="inventory">
@@ -740,13 +753,126 @@
         function saveWorldItemState() { try { const s = {}; texturedObjects.forEach(i => { if (i.collected) s[i.id] = true; }); sessionStorage.setItem('looping_rooms_world_items', JSON.stringify(s)); } catch (e) { } }
         function loadWorldItemState() { try { const raw = sessionStorage.getItem('looping_rooms_world_items'); if (!raw) return; const s = JSON.parse(raw); texturedObjects.forEach(i => { if (s[i.id]) i.collected = true; }); } catch (e) { } }
 
-        
+        // ── TIMER CORE VARIABLES ──
+        let timerActive = false;
+        let timerStartTime = 0;
+        let timerElapsedTime = 0; // Tracks elapsed time in milliseconds
+        const timerEl = document.getElementById('game-timer');
 
         // Player
         function getSpawnPosition() { try { const from = sessionStorage.getItem('looping_rooms_entry_door'); if (from === 'north') return { x: 1084, y: 60 }; if (from === 'south') return { x: 1084, y: 1508 }; if (from === 'west') return { x: 60, y: 784 }; if (from === 'east') return { x: 2108, y: 784 }; } catch (e) { } return { x: 1084, y: 784 }; }
         const _spawn = getSpawnPosition();
-        const player = { x: _spawn.x, y: _spawn.y, width: 45, height: 45, velocityX: 0, velocityY: 0, speed: 7 };
+        const player = {
+            x: _spawn.x, y: _spawn.y, width: 45, height: 45,
+            velocityX: 0, velocityY: 0, speed: 7,
+            // Animation state
+            facing: 'down',       // 'up' | 'down' | 'left' | 'right'
+            moving: false,
+            animFrame: 0,         // 0 or 1 (two walk frames)
+            animTimer: 0,         // accumulates deltaTime ticks
+            animSpeed: 10,        // ticks per frame switch
+            idleTimer: 0,         // for idle breathing bob
+        };
         const camera = { x: player.x, y: player.y, zoom: 1.4 };
+
+        // ════════════════════════════════════════════════════════════
+        // SPRITESHEET ANIMATION CONFIG
+        // ════════════════════════════════════════════════════════════
+        // HOW TO USE:
+        //   1. Set PLAYER_SPRITE.src to your spritesheet image path.
+        //   2. Set frameW / frameH to the pixel size of ONE frame on the sheet.
+        //   3. For each animation key set row, col, frames, fps.
+        //   4. Leave src: '' to use the built-in procedural character.
+        //
+        // SUPPORTED ANIMATION KEYS:
+        //   idle_down, idle_up, idle_left, idle_right
+        //   walk_down, walk_up, walk_left, walk_right
+        //
+        // EXAMPLE — LPC-style 64x64 sheet (4 dirs × 9 walk frames):
+        //   src: 'assets/player.png', frameW: 64, frameH: 64
+        //   walk_down:  { row: 0, col: 0, frames: 9, fps: 10 }
+        //   walk_left:  { row: 1, col: 0, frames: 9, fps: 10 }
+        //   walk_right: { row: 2, col: 0, frames: 9, fps: 10 }
+        //   walk_up:    { row: 3, col: 0, frames: 9, fps: 10 }
+
+        const PLAYER_SPRITE = {
+            src: '',        // ← set to your spritesheet path, e.g. 'assets/player.png'
+            frameW: 48,     // width  of one frame in pixels on the sheet
+            frameH: 48,     // height of one frame in pixels on the sheet
+            scale: 1,       // draw scale multiplier (1 = match player.width/height)
+            offsetX: 0,     // fine-tune horizontal draw offset in pixels
+            offsetY: 0,     // fine-tune vertical   draw offset in pixels
+
+            // Each entry: row/col = zero-based tile coords, frames = frame count, fps = speed
+            anims: {
+                idle_down:  { row: 0, col: 0, frames: 1, fps: 4 },
+                idle_up:    { row: 1, col: 0, frames: 1, fps: 4 },
+                idle_left:  { row: 2, col: 0, frames: 1, fps: 4 },
+                idle_right: { row: 3, col: 0, frames: 1, fps: 4 },
+                walk_down:  { row: 0, col: 0, frames: 4, fps: 8 },
+                walk_up:    { row: 1, col: 0, frames: 4, fps: 8 },
+                walk_left:  { row: 2, col: 0, frames: 4, fps: 8 },
+                walk_right: { row: 3, col: 0, frames: 4, fps: 8 },
+            },
+
+            // Runtime state — do not edit
+            _img: null,
+            _ready: false,
+            _animKey: 'idle_down',
+            _frame: 0,
+            _elapsed: 0,
+        };
+
+        (function loadPlayerSprite() {
+            if (!PLAYER_SPRITE.src) return;
+            const img = new Image();
+            img.onload  = () => { PLAYER_SPRITE._img = img; PLAYER_SPRITE._ready = true; };
+            img.onerror = () => { console.warn('[Spritesheet] Failed to load:', PLAYER_SPRITE.src); };
+            img.src = PLAYER_SPRITE.src;
+        })();
+
+        function updateSpriteAnim(dtSeconds) {
+            if (!PLAYER_SPRITE._ready) return;
+            const key  = (player.moving ? 'walk_' : 'idle_') + player.facing;
+            const anim = PLAYER_SPRITE.anims[key] || PLAYER_SPRITE.anims['idle_down'];
+            if (PLAYER_SPRITE._animKey !== key) {
+                PLAYER_SPRITE._animKey = key;
+                PLAYER_SPRITE._frame   = 0;
+                PLAYER_SPRITE._elapsed = 0;
+            }
+            PLAYER_SPRITE._elapsed += dtSeconds;
+            const frameDur = 1 / Math.max(anim.fps, 0.01);
+            while (PLAYER_SPRITE._elapsed >= frameDur) {
+                PLAYER_SPRITE._elapsed -= frameDur;
+                PLAYER_SPRITE._frame = (PLAYER_SPRITE._frame + 1) % anim.frames;
+            }
+        }
+
+        function drawSpritePlayer() {
+            const key  = PLAYER_SPRITE._animKey;
+            const anim = PLAYER_SPRITE.anims[key] || PLAYER_SPRITE.anims['idle_down'];
+            const srcX = (anim.col + PLAYER_SPRITE._frame) * PLAYER_SPRITE.frameW;
+            const srcY = anim.row * PLAYER_SPRITE.frameH;
+            const dw   = player.width  * PLAYER_SPRITE.scale;
+            const dh   = player.height * PLAYER_SPRITE.scale;
+            const dx   = player.x + player.width  / 2 - dw / 2 + PLAYER_SPRITE.offsetX;
+            const dy   = player.y + player.height / 2 - dh / 2 + PLAYER_SPRITE.offsetY;
+
+            // Ground shadow
+            ctx.save();
+            ctx.fillStyle = 'rgba(0,0,0,0.22)';
+            ctx.beginPath();
+            ctx.ellipse(player.x + player.width / 2, player.y + player.height + 2,
+                        player.width * 0.38, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            ctx.drawImage(
+                PLAYER_SPRITE._img,
+                srcX, srcY, PLAYER_SPRITE.frameW, PLAYER_SPRITE.frameH,
+                dx, dy, dw, dh
+            );
+        }
 
 
         // Which apt is player in?
@@ -807,7 +933,28 @@
                 }
             }
 
-            
+            // Listen for keybind trigger 'T' to toggle start/pause
+            if (e.code === 'KeyT') {
+                if (!timerActive) {
+                    timerActive = true;
+                    timerStartTime = performance.now() - timerElapsedTime;
+                } else {
+                    timerActive = false;
+                }
+            }
+
+            // ── NEW: PRESS 'R' TO RESET THE TIMER ──
+            if (e.code === 'KeyR') {
+                timerActive = false;       // Stop the countdown clock
+                timerElapsedTime = 0;      // Reset elapsed milliseconds to 0
+                timerStartTime = performance.now(); // Rewind timestamp anchors
+
+                // Reset the text on screen back to zeros instantly
+                if (timerEl) {
+                    timerEl.textContent = "Time: 00:00.00";
+                    timerEl.style.borderColor = '#555555'; // Return border to default grey
+                }
+            }
         }
         );
         document.addEventListener('keyup', e => keys[e.code] = false);
@@ -1168,7 +1315,44 @@
         }
         const W12 = 12;
 
-        function updatePlayer() { if (noteOpen || lockboxOpen || isTransitioning || dialogueOpen) return; player.velocityX = 0; player.velocityY = 0; if (keys['KeyA'] || keys['ArrowLeft']) player.velocityX = -player.speed; if (keys['KeyD'] || keys['ArrowRight']) player.velocityX = player.speed; if (keys['KeyW'] || keys['ArrowUp']) player.velocityY = -player.speed; if (keys['KeyS'] || keys['ArrowDown']) player.velocityY = player.speed; if (player.velocityX && player.velocityY) { player.velocityX *= 0.707; player.velocityY *= 0.707; } player.x += player.velocityX * deltaTime; player.y += player.velocityY * deltaTime; clampPlayerToWorld(); }
+        function updatePlayer() {
+            if (noteOpen || lockboxOpen || isTransitioning || dialogueOpen) return;
+            player.velocityX = 0; player.velocityY = 0;
+            if (keys['KeyA'] || keys['ArrowLeft']) player.velocityX = -player.speed;
+            if (keys['KeyD'] || keys['ArrowRight']) player.velocityX = player.speed;
+            if (keys['KeyW'] || keys['ArrowUp']) player.velocityY = -player.speed;
+            if (keys['KeyS'] || keys['ArrowDown']) player.velocityY = player.speed;
+            if (player.velocityX && player.velocityY) { player.velocityX *= 0.707; player.velocityY *= 0.707; }
+
+            // ── Determine facing direction (prioritise last axis pressed) ──
+            if (Math.abs(player.velocityY) >= Math.abs(player.velocityX)) {
+                if (player.velocityY < 0) player.facing = 'up';
+                else if (player.velocityY > 0) player.facing = 'down';
+            }
+            if (Math.abs(player.velocityX) > Math.abs(player.velocityY)) {
+                if (player.velocityX < 0) player.facing = 'left';
+                else if (player.velocityX > 0) player.facing = 'right';
+            }
+
+            // ── Animation frame cycling ──
+            player.moving = (player.velocityX !== 0 || player.velocityY !== 0);
+            if (player.moving) {
+                player.animTimer += deltaTime;
+                if (player.animTimer >= player.animSpeed) {
+                    player.animTimer = 0;
+                    player.animFrame = 1 - player.animFrame; // toggle 0 <-> 1
+                }
+                player.idleTimer = 0;
+            } else {
+                player.animFrame = 0;
+                player.animTimer = 0;
+                player.idleTimer += deltaTime;
+            }
+
+            player.x += player.velocityX * deltaTime;
+            player.y += player.velocityY * deltaTime;
+            clampPlayerToWorld();
+        }
         function updateCamera() { const lerp = 0.2 * deltaTime; camera.x += (player.x + player.width / 2 - camera.x) * lerp; camera.y += (player.y + player.height / 2 - camera.y) * lerp; const INV_OFFSET = 76; const halfW = (canvas.width / 2) / camera.zoom, halfH = (canvas.height / 2 - INV_OFFSET / 2) / camera.zoom; camera.x = Math.max(halfW, Math.min(W - halfW, camera.x)); camera.y = Math.max(halfH, Math.min(H - halfH, camera.y)); }
         function updateDoorAnims() { for (let d of APT_DOORS) { if (d.isOpen && d.openAnim < 1) d.openAnim = Math.min(1, d.openAnim + 0.06 * deltaTime); if (!d.isOpen && d.openAnim > 0) d.openAnim = Math.max(0, d.openAnim - 0.06 * deltaTime); } }
 
@@ -1506,9 +1690,208 @@
         }
 
         function drawPlayer() {
-            const cx = player.x + player.width / 2, cy = player.y + player.height / 2;
-            ctx.fillStyle = '#e05555'; ctx.beginPath(); ctx.arc(cx, cy, player.width / 2, 0, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = '#ff8888'; ctx.lineWidth = 2; ctx.stroke();
+            // Use spritesheet when loaded, otherwise fall back to procedural character
+            if (PLAYER_SPRITE._ready) { drawSpritePlayer(); return; }
+
+            const px = player.x, py = player.y;
+            const pw = player.width, ph = player.height;
+            const cx = px + pw / 2;
+
+            // ── Derived animation values ──
+            const facing  = player.facing;
+            const frame   = player.animFrame;      // 0 or 1
+            const moving  = player.moving;
+            // idle bob: gentle up/down breathing
+            const idleBob = moving ? 0 : Math.sin(player.idleTimer * 0.05) * 1.2;
+
+            // ── Walk cycle offsets (leg / arm swing) ──
+            // frame 0 → right leg forward, frame 1 → left leg forward
+            const legSwing = moving ? (frame === 0 ? 1 : -1) : 0;
+
+            // ── Palette ──
+            const skinColor   = '#f5c59a';
+            const hairColor   = '#3a2010';
+            const shirtColor  = '#4a7fc1';
+            const pantsColor  = '#2a3a5a';
+            const shoeColor   = '#1a1a1a';
+            const shadowColor = 'rgba(0,0,0,0.25)';
+
+            ctx.save();
+
+            // ── Ground shadow ──
+            ctx.fillStyle = shadowColor;
+            ctx.beginPath();
+            ctx.ellipse(cx, py + ph + 2, pw * 0.38, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // All offsets relative to top-left of bounding box
+            // We'll translate to character centre at foot level
+            const footY = py + ph;
+            ctx.translate(cx, footY + idleBob);
+
+            // Helper: rounded rect
+            function rRect(x, y, w, h, r) {
+                ctx.beginPath();
+                ctx.roundRect(x - w/2, y - h, w, h, r);
+                ctx.fill();
+            }
+
+            if (facing === 'down') {
+                // ── FACING DOWN (front view) ──
+
+                // Legs
+                const legW = 10, legH = 15;
+                const legY = 0; // legs hang from foot level
+                // Left leg
+                ctx.fillStyle = pantsColor;
+                ctx.beginPath();
+                ctx.roundRect(-legW - 1 + legSwing * 2, -legH, legW, legH, 3);
+                ctx.fill();
+                // Right leg
+                ctx.beginPath();
+                ctx.roundRect(1 - legSwing * 2, -legH, legW, legH, 3);
+                ctx.fill();
+
+                // Shoes
+                ctx.fillStyle = shoeColor;
+                ctx.beginPath(); ctx.ellipse(-legW/2 + legSwing * 2, -1, 7, 4, 0, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(legW/2 + 1 - legSwing * 2 + 1, -1, 7, 4, 0, 0, Math.PI*2); ctx.fill();
+
+                // Torso
+                const bodyTop = -(legH + 18);
+                ctx.fillStyle = shirtColor;
+                ctx.beginPath();
+                ctx.roundRect(-11, bodyTop, 22, 20, 4);
+                ctx.fill();
+
+                // Arms
+                const armY = bodyTop + 4;
+                const armSwingX = moving ? legSwing * 3 : 0;
+                ctx.fillStyle = shirtColor;
+                // Left arm
+                ctx.beginPath(); ctx.roundRect(-18, armY - armSwingX, 7, 14, 3); ctx.fill();
+                // Right arm
+                ctx.beginPath(); ctx.roundRect(11, armY + armSwingX, 7, 14, 3); ctx.fill();
+                // Hands
+                ctx.fillStyle = skinColor;
+                ctx.beginPath(); ctx.arc(-14.5, armY + 14 - armSwingX, 4, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(14.5, armY + 14 + armSwingX, 4, 0, Math.PI*2); ctx.fill();
+
+                // Head
+                const headY = bodyTop - 2;
+                ctx.fillStyle = skinColor;
+                ctx.beginPath(); ctx.arc(0, headY - 9, 11, 0, Math.PI*2); ctx.fill();
+
+                // Hair
+                ctx.fillStyle = hairColor;
+                ctx.beginPath();
+                ctx.arc(0, headY - 11, 10, Math.PI, 0, false);
+                ctx.fill();
+                // Eyes (two dots)
+                ctx.fillStyle = '#222';
+                ctx.beginPath(); ctx.arc(-4, headY - 9, 1.8, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(4, headY - 9, 1.8, 0, Math.PI*2); ctx.fill();
+
+            } else if (facing === 'up') {
+                // ── FACING UP (back view) ──
+
+                // Legs
+                const legW = 10, legH = 15;
+                ctx.fillStyle = pantsColor;
+                ctx.beginPath(); ctx.roundRect(-legW - 1 + legSwing * 2, -legH, legW, legH, 3); ctx.fill();
+                ctx.beginPath(); ctx.roundRect(1 - legSwing * 2, -legH, legW, legH, 3); ctx.fill();
+
+                // Shoes
+                ctx.fillStyle = shoeColor;
+                ctx.beginPath(); ctx.ellipse(-legW/2 + legSwing * 2, -1, 7, 4, 0, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(legW/2 + 1 - legSwing * 2 + 1, -1, 7, 4, 0, 0, Math.PI*2); ctx.fill();
+
+                // Torso (back)
+                const bodyTop = -(legH + 18);
+                ctx.fillStyle = shirtColor;
+                ctx.beginPath(); ctx.roundRect(-11, bodyTop, 22, 20, 4); ctx.fill();
+
+                // Arms (back)
+                const armY = bodyTop + 4;
+                const armSwingX = moving ? legSwing * 3 : 0;
+                ctx.fillStyle = shirtColor;
+                ctx.beginPath(); ctx.roundRect(-18, armY + armSwingX, 7, 14, 3); ctx.fill();
+                ctx.beginPath(); ctx.roundRect(11, armY - armSwingX, 7, 14, 3); ctx.fill();
+                ctx.fillStyle = skinColor;
+                ctx.beginPath(); ctx.arc(-14.5, armY + 14 + armSwingX, 4, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(14.5, armY + 14 - armSwingX, 4, 0, Math.PI*2); ctx.fill();
+
+                // Head (back — no face)
+                const headY = bodyTop - 2;
+                ctx.fillStyle = skinColor;
+                ctx.beginPath(); ctx.arc(0, headY - 9, 11, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = hairColor;
+                ctx.beginPath(); ctx.arc(0, headY - 9, 10.5, 0, Math.PI*2); ctx.fill();
+                // Tiny ear hints
+                ctx.fillStyle = skinColor;
+                ctx.beginPath(); ctx.arc(-10, headY - 9, 3.5, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(10, headY - 9, 3.5, 0, Math.PI*2); ctx.fill();
+
+            } else {
+                // ── FACING LEFT or RIGHT (side view) ──
+                const dir = (facing === 'right') ? 1 : -1; // 1=right, -1=left
+
+                // Legs (side: one in front, one behind)
+                const legH = 15;
+                const frontLegOff = legSwing * 4 * dir;
+                const backLegOff  = -legSwing * 3 * dir;
+
+                // Back leg (darker)
+                ctx.fillStyle = '#1c2a40';
+                ctx.beginPath(); ctx.roundRect(-5, -legH + backLegOff, 9, legH, 3); ctx.fill();
+                ctx.fillStyle = '#111';
+                ctx.beginPath(); ctx.ellipse(dir * 3, -1 + backLegOff, 6, 4, 0, 0, Math.PI*2); ctx.fill();
+
+                // Front leg
+                ctx.fillStyle = pantsColor;
+                ctx.beginPath(); ctx.roundRect(-5, -legH + frontLegOff, 9, legH, 3); ctx.fill();
+                ctx.fillStyle = shoeColor;
+                ctx.beginPath(); ctx.ellipse(dir * 4, -1 + frontLegOff, 7, 4, 0, 0, Math.PI*2); ctx.fill();
+
+                // Torso
+                const bodyTop = -(legH + 18);
+                ctx.fillStyle = shirtColor;
+                ctx.beginPath(); ctx.roundRect(-9, bodyTop, 18, 20, 4); ctx.fill();
+
+                // Back arm (behind torso)
+                const armSwing = moving ? legSwing * 4 : 0;
+                ctx.fillStyle = '#3a6aab';
+                ctx.beginPath(); ctx.roundRect(-6, bodyTop + 4 + armSwing * dir, 8, 14, 3); ctx.fill();
+                ctx.fillStyle = '#d4a87a';
+                ctx.beginPath(); ctx.arc(-2, bodyTop + 18 + armSwing * dir, 4, 0, Math.PI*2); ctx.fill();
+
+                // Front arm
+                ctx.fillStyle = shirtColor;
+                ctx.beginPath(); ctx.roundRect(-6, bodyTop + 4 - armSwing * dir, 8, 14, 3); ctx.fill();
+                ctx.fillStyle = skinColor;
+                ctx.beginPath(); ctx.arc(-2, bodyTop + 18 - armSwing * dir, 4, 0, Math.PI*2); ctx.fill();
+
+                // Head
+                const headY = bodyTop - 2;
+                ctx.fillStyle = skinColor;
+                ctx.beginPath(); ctx.arc(dir * 1, headY - 9, 11, 0, Math.PI*2); ctx.fill();
+
+                // Hair
+                ctx.fillStyle = hairColor;
+                ctx.beginPath();
+                ctx.arc(dir * 1, headY - 11, 10, Math.PI * 1.1, Math.PI * 0.0, false);
+                ctx.closePath();
+                ctx.fill();
+
+                // Eye (front side only)
+                ctx.fillStyle = '#222';
+                ctx.beginPath(); ctx.arc(dir * 7, headY - 9, 1.8, 0, Math.PI*2); ctx.fill();
+                // Ear
+                ctx.fillStyle = skinColor;
+                ctx.beginPath(); ctx.arc(-dir * 9, headY - 9, 3.5, 0, Math.PI*2); ctx.fill();
+            }
+
+            ctx.restore();
         }
 
         function drawFeedbacks() {
@@ -1524,8 +1907,31 @@
 
 
         function gameLoop(currentTime) {
+            // ── UPDATE TIMING PROCESSING ──
+            if (timerActive) {
+                // Calculate time passed since hitting start using currentTime
+                timerElapsedTime = currentTime - timerStartTime;
+
+                // Format total milliseconds into minutes, seconds, and centiseconds
+                const totalSeconds = timerElapsedTime / 1000;
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = Math.floor(totalSeconds % 60);
+                const centiseconds = Math.floor((timerElapsedTime % 1000) / 10);
+
+                // Pad numbers with leading zeros for arcade-style display text
+                const minStr = String(minutes).padStart(2, '0');
+                const secStr = String(seconds).padStart(2, '0');
+                const msStr = String(centiseconds).padStart(2, '0');
+
+                timerEl.textContent = `Time: ${minStr}:${secStr}.${msStr}`;
+                timerEl.style.borderColor = '#ff3333'; // Changes color when running
+            } else if (timerElapsedTime > 0) {
+                // Display text style behavior when paused
+                timerEl.style.borderColor = '#555555';
+            }
+
             // ── ENGINE DELTA TIME CALCULATIONS ──
-            deltaTime = (currentTime - lastTime) / (1000 / 60);    
+            deltaTime = (currentTime - lastTime) / (1000 / 60);
             lastTime = currentTime;
             deltaTime = Math.min(deltaTime, 3);
 
@@ -1533,6 +1939,7 @@
             ctx.fillStyle = '#111'; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             updatePlayer();
+            updateSpriteAnim(deltaTime / 60); // convert 60fps ticks to seconds
             updateCamera();
             updateDoorAnims();
             updateDoorLogic();
