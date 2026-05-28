@@ -484,6 +484,25 @@
     </div>
 
     <script>
+        // Polyfill for roundRect
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+                if (typeof r === 'number') r = { tl: r, tr: r, br: r, bl: r };
+                else r = { tl: r[0], tr: r[1], br: r[2], bl: r[3] };
+                this.beginPath();
+                this.moveTo(x + r.tl, y);
+                this.lineTo(x + w - r.tr, y);
+                this.quadraticCurveTo(x + w, y, x + w, y + r.tr);
+                this.lineTo(x + w, y + h - r.br);
+                this.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
+                this.lineTo(x + r.bl, y + h);
+                this.quadraticCurveTo(x, y + h, x, y + h - r.bl);
+                this.lineTo(x, y + r.tl);
+                this.quadraticCurveTo(x, y, x + r.tl, y);
+                this.closePath();
+                return this;
+            };
+        }
 
 
         
@@ -518,40 +537,38 @@
         
         
 
-        const W = 2200, H = 1600;
-        const CORR_Y1 = 613, CORR_Y2 = 975, CORR_X1 = 925, CORR_X2 = 1275;
+        const W = 1000, H = 800; // Reduced from 1600x1200
+        const W12 = 12; // Wall thickness
         
-        const NW_SPLIT_X = 462, NW_SPLIT_Y = 300;
-        const NE_SPLIT_X = 1737, NE_SPLIT_Y = 300;
-        const SW_SPLIT_X = 462, SW_SPLIT_Y = 1287;
-        const SE_SPLIT_X = 1737, SE_SPLIT_Y = 1287;
+        // Shrunk layout - Centered
+        // The total width is 1000. 
+        // We want a central room of 300 width. (1000 - 300) / 2 = 350.
+        // So the left wall is at 350, right wall is at 650.
+        const SPLIT_X_LEFT = 350;  
+        const SPLIT_X_RIGHT = 650; 
+        
+        const SPLIT_Y_MID = 300;   // Top room height
+        const SPLIT_Y_BOTTOM = 550; // Middle room height
+        
+        // Corridor width is 140. (1000 - 140) / 2 = 430.
+        const CORR_X1 = 430, CORR_X2 = 570; 
 
-        const NW_KITCHEN_BOTTOM = 508; 
-
-        
-        const DOOR_W = 12, DOOR_OPENING = 130;
-
-        
-        
-        
-        const NW_NE_DOOR_CENTER = 430; 
-        const SW_SE_DOOR_CENTER = 1131; 
+        const DOOR_W = 12, DOOR_OPENING = 80; // Doors slightly narrower
 
         const APT_DOORS = [
-            
-            { id: 'door_NW', aptId: 'NW', x: CORR_X1 - DOOR_W, y: NW_NE_DOOR_CENTER - DOOR_OPENING / 2, w: DOOR_W, h: DOOR_OPENING, side: 'east', openAnim: 0, isOpen: false },
-            
-            { id: 'door_NE', aptId: 'NE', x: CORR_X2, y: NW_NE_DOOR_CENTER - DOOR_OPENING / 2, w: DOOR_W, h: DOOR_OPENING, side: 'west', openAnim: 0, isOpen: false },
-            
-            { id: 'door_SW', aptId: 'SW', x: CORR_X1 - DOOR_W, y: SW_SE_DOOR_CENTER - DOOR_OPENING / 2, w: DOOR_W, h: DOOR_OPENING, side: 'east', openAnim: 0, isOpen: false, restricted: true },
-            
-            { id: 'door_SE', aptId: 'SE', x: CORR_X2, y: SW_SE_DOOR_CENTER - DOOR_OPENING / 2, w: DOOR_W, h: DOOR_OPENING, side: 'west', openAnim: 0, isOpen: false, restricted: true },
+            // Door between Room 1 and Room 2
+            { id: 'door_1_2', aptId: 'R1', x: SPLIT_X_LEFT - DOOR_W, y: 400, w: DOOR_W, h: DOOR_OPENING, side: 'east', openAnim: 0, isOpen: false },
+            // Door between Room 2 and Room 3
+            { id: 'door_2_3', aptId: 'R2', x: SPLIT_X_RIGHT, y: 400, w: DOOR_W, h: DOOR_OPENING, side: 'west', openAnim: 0, isOpen: false },
+            // Door between Room 2 and Room 4 (horizontal)
+            // Center of room 2 is 500. Door is 80 wide. (500 - 40) = 460
+            { id: 'door_2_4', aptId: 'R2', x: 460, y: SPLIT_Y_MID - DOOR_W, w: DOOR_OPENING, h: DOOR_W, side: 'north', openAnim: 0, isOpen: false, isHorizontal: true },
+            // Door between Corridor and Room 2 (horizontal)
+            { id: 'door_corr_2', aptId: 'R2', x: 460, y: SPLIT_Y_BOTTOM - DOOR_W, w: DOOR_OPENING, h: DOOR_W, side: 'south', openAnim: 0, isOpen: false, isHorizontal: true },
         ];
 
-        
         const exitDoors = [
-            { id: 'main', x: 1060, y: 1580, w: 80, h: 20, label: 'M' },
-
+            { id: 'main', x: 460, y: H - 20, w: 80, h: 20, label: 'M' },
         ];
 
         
@@ -607,118 +624,7 @@
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
         const texturedObjects = [
-
-
-            
-            
-            
-            {
-                id: 'nw_fridge', x: 20, y: 20, width: 60, height: 100, texture: 'assets/fridge.png', label: 'Fridge', solid: true,
-                dialogue: ['* A large fridge humming quietly.', '* The door is slightly ajar.', '* Inside, you see a faint glint of something metallic.'],
-                containsItem: { id: 'east_lockbox_key', icon: '🔑', label: 'East Lockbox Key' },
-            },
-            {
-                id: 'nw_oven', x: 180, y: 20, width: 70, height: 60, texture: 'assets/oven.png', label: 'Oven', solid: true,
-                dialogue: ['* A dusty oven with a broken door.', '* Maybe there is something inside?'],
-                containsItem: { id: 'small_screwdriver', icon: '🪛', label: 'Small Screwdriver' },
-            },
-            { id: 'nw_washing_machine', x: 300, y: 20, width: 70, height: 60, texture: 'assets/washing_machine.png', label: 'Washing Machine', solid: true, dialogue: ['* An old washing machine.'] },
-            {
-                id: 'nw_cabinet', x: 380, y: 170, width: 80, height: 100, texture: 'assets/cabinet.png', label: 'Kitchen Cabinet', solid: true,
-                dialogue: ['* A tall kitchen cabinet with glass doors.'],
-
-            },
-
-            
-            
-            
-            { id: 'nw_bed', x: 580, y: 20, width: 150, height: 115, texture: 'assets/bed.png', label: 'Bed', solid: true, dialogue: ['* A sturdy bed.', '* It looks comfortable.'] },
-            { id: 'nw_nightstand', x: 500, y: 20, width: 60, height: 60, texture: 'assets/night_table.png', label: 'Nightstand', solid: true, dialogue: ['* A small nightstand.'] },
-            {
-                id: 'nw_desk', x: 810, y: 220, width: 100, height: 60, texture: 'assets/desk.png', label: 'Desk', solid: true,
-                dialogue: ['* A wooden desk.', '* On the surface, there is a handwritten note.'],
-                containsItem: { id: 'note_desk', icon: '📝', texture: 'assets/note.png', label: 'Note 2#', dialogue: ['* A handwritten note with the number "6" scribbled on it.', '* It might be a clue for something.'] }, itemTaken: false
-            },
-            { id: 'nw_dresser', x: 850, y: 35, width: 40, height: 100, texture: 'assets/dresser.png', label: 'Dresser', solid: true, dialogue: ['* A tall dresser with several drawers.'] },
-
-            
-            
-            
-            { id: 'nw_sink', x: 145, y: 330, width: 80, height: 60, texture: 'assets/sink.png', label: 'Sink', solid: true, dialogue: ['* A bathroom sink with a mirror above it.', '* The faucet drips occasionally.'] },
-            { id: 'nw_toilet', x: 10, y: 450, width: 60, height: 60, texture: 'assets/toilet.png', label: 'Toilet', solid: true, dialogue: ['* A simple toilet.'] },
-            { id: 'nw_shower', x: 30, y: 530, width: 60, height: 60, texture: 'assets/shower.png', label: 'Shower', solid: true, dialogue: ['* A shower stall with a glass door.', '* The tiles are cracked and moldy.'] },
-            { id: 'nw_mirror', x: 250, y: 530, width: 60, height: 60, texture: 'assets/mirror.png', label: 'Mirror', solid: true, dialogue: ['* A large wall mirror.', '* You notice something odd about the corners.'] },
-
-            
-            
-            
-            { id: 'nw_tv', x: 370, y: 318, width: 180, height: 80, texture: 'assets/tv.png', label: 'TV', solid: true, dialogue: ['* A modern TV.', '* It is plugged in and seems to be working.'] },
-            { id: 'nw_rug', x: 370, y: 430, width: 100, height: 55, solid: false, texture: 'assets/rug.png', label: 'Rug', dialogue: ['* A faded rug with an intricate pattern.'] },
-            { id: 'nw_couch', x: 380, y: 520, width: 160, height: 65, texture: 'assets/couch.png', label: 'Couch', solid: true, dialogue: ['* A comfortable couch.', '* There is a small book on the seat.'] },
-            {
-                id: 'nw_liqor_cabinet', x: 815, y: 310, width: 80, height: 100, solid: true, texture: 'assets/liqor_cabinet.png', label: 'Liquor Cabinet',
-
-                dialogue: ['* A liquor cabinet filled with dusty bottles.', '* The glass doors are locked.']
-            },
-
-            
-            
-            
-            {
-                id: 'ne_nightstand', x: 1290, y: 15, width: 60, height: 60, texture: 'assets/night_table.png', label: 'Nightstand', solid: true,
-                dialogue: ['* A small nightstand.', '* The drawer is stuck.', '* Maybe you could pry it open?'],
-                isCustomPuzzle: true, requiresItem: 'small_screwdriver', unlocked: false, itemTaken: false,
-                containsItem: { id: '2# Note', icon: '📝', label: ' Note2# ' ,dialogue: ['* A handwritten note with the number "6" scribbled on it.'] }, itemTaken: false
-            },
-
-            { id: 'ne_bed', x: 1360, y: 10, width: 150, height: 115, texture: 'assets/bed.png', label: 'Bed', solid: true, dialogue: ['* A neatly made bed.', '* The sheets are crisp and white.'] },
-            {
-                id: 'ne_dresser', x: 1690, y: 15, width: 40, height: 100, texture: 'assets/dresser.png', label: 'Dresser', solid: true,
-                dialogue: ['* A tall dresser.', '* Inside you spot something buried under the clothes.'],
-                containsItem: { id: 'plunger', icon: '🪠', texture: 'assets/plunger.png', label: 'Plunger' }, itemTaken: false
-            },
-            { id: 'ne_desk', x: 1300, y: 220, width: 100, height: 60, texture: 'assets/desk.png', label: 'Desk', solid: true, dialogue: ['* A wooden desk.', '* Papers are scattered across the surface.'] },
-
-            
-            
-            
-            { id: 'ne_sink', x: 1840, y: 15, width: 80, height: 60, texture: 'assets/sink.png', label: 'Sink', solid: true, dialogue: ['* A bathroom sink with a mirror above it.', '* The faucet drips occasionally.'] },
-            { id: 'ne_shower', x: 2025, y: 10, width: 110, height: 75, texture: 'assets/shower.png', label: 'Shower', solid: true, dialogue: ['* A shower stall.', '* The tiles are cracked.'] },
-            {
-                id: 'ne_toilet', x: 1750, y: 185, width: 90, height: 80, texture: 'assets/toilet.png', label: 'Toilet', solid: true,
-                isCustomPuzzle: true, requiresItem: 'plunger', unlocked: false, itemTaken: false,
-                dialogue: ['* A simple toilet.', '* Nevermind, it\'s actually clogged.'],
-                containsItem: { id: 'key_east', icon: '🔑', label: 'East Key' },
-
-            },
-
-            
-            
-            
-            { id: 'ne_tv', x: 1598, y: 318, width: 180, height: 80, texture: 'assets/tv.png', label: 'TV', solid: true, dialogue: ['* A large flat-screen TV.'] },
-            { id: 'ne_rug', x: 1670, y: 430, width: 100, height: 55, solid: false, texture: 'assets/rug.png', label: 'Rug', dialogue: ['* A worn rug on the floor.'] },
-            { id: 'ne_couch', x: 1610, y: 520, width: 160, height: 65, texture: 'assets/couch.png', label: 'Couch', solid: true, dialogue: ['* A long couch facing the TV.'] },
-            {
-                id: 'ne_liqor_cabinet', x: 1800, y: 320, width: 80, height: 100, solid: true, texture: 'assets/liqor_cabinet.png', label: 'Liquor Cabinet',
-                isCustomPuzzle: true, requiresItem: 'key_liqor', unlocked: false, itemTaken: false,
-                containsItem: { id: 'small_screwdriver', icon: '🪛', label: 'Small Screwdriver' },
-                dialogue: ['* A liquor cabinet filled with dusty bottles.', '* The glass doors are locked.']
-            },
-
-            
-            
-            
-            {
-                id: 'puzzle_vent', x: 1680, y: 250, width: 35, height: 35, texture: 'assets/vent.png', label: 'Wall Vent', solid: true,
-
-                dialogue: ['* The screws are..', '* Tight, tight, tight.', '* A screwdriver wont be enough to open this vent.']
-            },
-            {
-                id: 'puzzle_lockbox', x: 1310, y: 540, width: 40, height: 40, texture: 'assets/small_box.png', label: 'Lock Box', solid: true,
-                isCustomPuzzle: true, requiresItem: 'key_lockbox', unlocked: false, itemTaken: false,
-                containsItem: { id: 'key_liqor', icon: '🔑', label: 'Liquor Cabinet Key' },
-                dialogue: ['* A small wooden box with a sturdy brass padlock.', '* It needs a specific key to open.']
-            },
+            // Voorlopig leeg, later herinrichten indien nodig
         ];
 
         const _texCache = {};
@@ -731,13 +637,21 @@
         
 
         
-        function getSpawnPosition() { try { const from = sessionStorage.getItem('looping_rooms_entry_door'); if (from === 'north') return { x: 1084, y: 60 }; if (from === 'south') return { x: 1084, y: 1508 }; if (from === 'west') return { x: 60, y: 784 }; if (from === 'east') return { x: 2108, y: 784 }; } catch (e) { } return { x: 1084, y: 784 }; }
+        function getSpawnPosition() { 
+            try { 
+                const from = sessionStorage.getItem('looping_rooms_entry_door'); 
+                if (from === 'south') return { x: 500, y: H - 100 }; 
+                if (from === 'north') return { x: 500, y: 100 }; 
+                if (from === 'west') return { x: 100, y: 400 }; 
+                if (from === 'east') return { x: W - 100, y: 400 }; 
+            } catch (e) { } 
+            return { x: 500, y: H - 100 }; 
+        }
         const _spawn = getSpawnPosition();
         const player = {
-            x: 1060, y: 1540, width: 45, height: 45,
+            x: _spawn.x, y: _spawn.y, width: 45, height: 45,
             velocityX: 0, velocityY: 0, speed: 7,
-            
-            facing: 'down',       
+            facing: 'up',       
             moving: false,
             animFrame: 0,         
             animTimer: 0,         
@@ -827,20 +741,24 @@
         }
 
         
-        function getPlayerApt() { const px = player.x + player.width / 2, py = player.y + player.height / 2; if (px < CORR_X1 && py < CORR_Y1) return 'NW'; if (px > CORR_X2 && py < CORR_Y1) return 'NE'; if (px < CORR_X1 && py > CORR_Y2) return 'SW'; if (px > CORR_X2 && py > CORR_Y2) return 'SE'; return null; }
+        function getPlayerApt() { 
+            const px = player.x + player.width / 2, py = player.y + player.height / 2; 
+            if (px < SPLIT_X_LEFT) return 'R1'; 
+            if (px >= SPLIT_X_LEFT && px < SPLIT_X_RIGHT && py >= SPLIT_Y_MID && py < SPLIT_Y_BOTTOM) return 'R2'; 
+            if (px >= SPLIT_X_RIGHT && py >= SPLIT_Y_MID && py < SPLIT_Y_BOTTOM) return 'R3'; 
+            if (px >= SPLIT_X_LEFT && py < SPLIT_Y_MID) return 'R4';
+            return null; 
+        }
 
         let lastPlayerApt = null;
         function updateDoorLogic() {
             const curApt = getPlayerApt();
             if (curApt !== lastPlayerApt) {
-                
-                if (lastPlayerApt) { const d = APT_DOORS.find(d => d.aptId === lastPlayerApt); if (d) d.isOpen = false; }
-                
-                if (curApt) {
-                    const d = APT_DOORS.find(d => d.aptId === curApt);
-                    if (d && !d.restricted) d.isOpen = true;
-                    if (d && d.restricted) showDoorMsg('Restricted Area!');
-                }
+                // Close all doors that do not belong to the current room
+                APT_DOORS.forEach(d => {
+                    if (d.aptId !== curApt) d.isOpen = false;
+                    else if (!d.restricted) d.isOpen = true;
+                });
                 lastPlayerApt = curApt;
             }
         }
@@ -903,25 +821,12 @@
         
         
         
-        const NW_NARROW_ROOM_W_DEF = 240;
         const ROOMS = [
-            
-            { id: 'nw_kitchen', x: 0, y: 0, w: NW_SPLIT_X, h: NW_SPLIT_Y },
-            { id: 'nw_newroom', x: 0, y: NW_SPLIT_Y, w: NW_NARROW_ROOM_W_DEF, h: CORR_Y1 - NW_SPLIT_Y },
-            { id: 'nw_bedroom', x: NW_SPLIT_X, y: 0, w: CORR_X1 - NW_SPLIT_X, h: NW_SPLIT_Y },
-            { id: 'nw_living', x: NW_NARROW_ROOM_W_DEF, y: NW_SPLIT_Y, w: CORR_X1 - NW_NARROW_ROOM_W_DEF, h: CORR_Y1 - NW_SPLIT_Y },
-            
-            { id: 'ne_bedroom', x: CORR_X2, y: 0, w: NE_SPLIT_X - CORR_X2, h: NE_SPLIT_Y },
-            { id: 'ne_bathroom', x: NE_SPLIT_X, y: 0, w: W - NE_SPLIT_X, h: NE_SPLIT_Y },
-            { id: 'ne_living', x: CORR_X2, y: NE_SPLIT_Y, w: W - CORR_X2, h: CORR_Y1 - NE_SPLIT_Y },
-            
-            { id: 'sw_living', x: 0, y: CORR_Y2, w: CORR_X1, h: SW_SPLIT_Y - CORR_Y2 },
-            { id: 'sw_bathroom', x: 0, y: SW_SPLIT_Y, w: SW_SPLIT_X, h: H - SW_SPLIT_Y },
-            { id: 'sw_bedroom', x: SW_SPLIT_X, y: SW_SPLIT_Y, w: CORR_X1 - SW_SPLIT_X, h: H - SW_SPLIT_Y },
-            
-            { id: 'se_living', x: CORR_X2, y: CORR_Y2, w: W - CORR_X2, h: SE_SPLIT_Y - CORR_Y2 },
-            { id: 'se_bedroom', x: CORR_X2, y: SE_SPLIT_Y, w: SE_SPLIT_X - CORR_X2, h: H - SE_SPLIT_Y },
-            { id: 'se_bathroom', x: SE_SPLIT_X, y: SE_SPLIT_Y, w: W - SE_SPLIT_X, h: H - SE_SPLIT_Y },
+            { id: 'room_1', x: 0, y: 0, w: SPLIT_X_LEFT, h: SPLIT_Y_BOTTOM },
+            { id: 'room_2', x: SPLIT_X_LEFT, y: SPLIT_Y_MID, w: SPLIT_X_RIGHT - SPLIT_X_LEFT, h: SPLIT_Y_BOTTOM - SPLIT_Y_MID },
+            { id: 'room_3', x: SPLIT_X_RIGHT, y: SPLIT_Y_MID, w: W - SPLIT_X_RIGHT, h: SPLIT_Y_BOTTOM - SPLIT_Y_MID },
+            { id: 'room_4', x: SPLIT_X_LEFT, y: 0, w: W - SPLIT_X_LEFT, h: SPLIT_Y_MID },
+            { id: 'corridor', x: CORR_X1, y: SPLIT_Y_BOTTOM, w: CORR_X2 - CORR_X1, h: H - SPLIT_Y_BOTTOM },
         ];
 
         
@@ -1116,405 +1021,182 @@
 
         function getWalls() {
             const walls = [];
-            const W12 = 12; 
             function wall(x, y, w, h) { walls.push({ x, y, w, h }); }
 
-            
+            // Outer walls
             wall(0, 0, W, W12);            
             wall(0, H - W12, W, W12);        
             wall(0, 0, W12, H);            
             wall(W - W12, 0, W12, H);        
 
-            
-            
+            // Room 1 walls
+            const d12 = APT_DOORS.find(d => d.id === 'door_1_2');
+            if (d12) addDoorWallSegments(walls, d12, SPLIT_X_LEFT - W12, 0, SPLIT_Y_BOTTOM);
+            else wall(SPLIT_X_LEFT - W12, 0, W12, SPLIT_Y_BOTTOM);
+            wall(0, SPLIT_Y_BOTTOM - W12, SPLIT_X_LEFT, W12);
 
-            
-            
+            // Room 2 walls
+            const d23 = APT_DOORS.find(d => d.id === 'door_2_3');
+            if (d23) addDoorWallSegments(walls, d23, SPLIT_X_RIGHT, SPLIT_Y_MID, SPLIT_Y_BOTTOM);
+            else wall(SPLIT_X_RIGHT, SPLIT_Y_MID, W12, SPLIT_Y_BOTTOM - SPLIT_Y_MID);
 
-            
-            addDoorWallSegments(walls, APT_DOORS.find(d => d.aptId === 'NW'), CORR_X1 - W12, 0, CORR_Y1);
-            
-            addDoorWallSegments(walls, APT_DOORS.find(d => d.aptId === 'NE'), CORR_X2, 0, CORR_Y1);
-            
-            addDoorWallSegments(walls, APT_DOORS.find(d => d.aptId === 'SW'), CORR_X1 - W12, CORR_Y2, H);
-            
-            addDoorWallSegments(walls, APT_DOORS.find(d => d.aptId === 'SE'), CORR_X2, CORR_Y2, H);
+            const d24 = APT_DOORS.find(d => d.id === 'door_2_4');
+            if (d24) addDoorWallSegments(walls, d24, SPLIT_Y_MID - W12, SPLIT_X_LEFT, SPLIT_X_RIGHT, true);
+            else wall(SPLIT_X_LEFT, SPLIT_Y_MID - W12, SPLIT_X_RIGHT - SPLIT_X_LEFT, W12);
 
-            
-            
-            walls.push({ x: NW_SPLIT_X, y: 0, w: 10, h: NW_SPLIT_Y });
-            walls.push({ x: NE_SPLIT_X, y: 0, w: 10, h: NE_SPLIT_Y });
-            walls.push({ x: SW_SPLIT_X, y: SW_SPLIT_Y, w: 10, h: H - SW_SPLIT_Y });
-            walls.push({ x: SE_SPLIT_X, y: SE_SPLIT_Y, w: 10, h: H - SE_SPLIT_Y });
+            const dCorr2 = APT_DOORS.find(d => d.id === 'door_corr_2');
+            if (dCorr2) addDoorWallSegments(walls, dCorr2, SPLIT_Y_BOTTOM - W12, SPLIT_X_LEFT, SPLIT_X_RIGHT, true);
+            else wall(SPLIT_X_LEFT, SPLIT_Y_BOTTOM - W12, SPLIT_X_RIGHT - SPLIT_X_LEFT, W12);
 
-            
-            
-            wallWithOpening2(walls, 'horizontal', 0, NW_SPLIT_Y, CORR_X1, NW_SPLIT_X / 2, NW_SPLIT_X + (CORR_X1 - NW_SPLIT_X) / 2, 180);
-            
-            wallWithOpening2(walls, 'horizontal', CORR_X2, NE_SPLIT_Y, W, CORR_X2 + (NE_SPLIT_X - CORR_X2) / 2, NE_SPLIT_X + (W - NE_SPLIT_X) / 2, 180);
-            
-            wallWithOpening2(walls, 'horizontal', 0, SW_SPLIT_Y, CORR_X1, SW_SPLIT_X / 2, SW_SPLIT_X + (CORR_X1 - SW_SPLIT_X) / 2, 180);
-            
-            wallWithOpening2(walls, 'horizontal', CORR_X2, SE_SPLIT_Y, W, CORR_X2 + (SE_SPLIT_X - CORR_X2) / 2, SE_SPLIT_X + (W - SE_SPLIT_X) / 2, 180);
-            
-            
-            
-            wall(0, CORR_Y1 - W12, CORR_X1, W12);             
-            wall(CORR_X2, CORR_Y1 - W12, W - CORR_X2, W12);   
-            
-            wall(0, CORR_Y2, CORR_X1, W12);                   
-            wall(CORR_X2, CORR_Y2, W - CORR_X2, W12);         
+            // Room 3 walls
+            wall(SPLIT_X_RIGHT, SPLIT_Y_BOTTOM - W12, W - SPLIT_X_RIGHT, W12);
 
-            
-            wall(130, 300, 100, 10); 
-            wall(230, 300, 10, 105); 
-            wall(230, 496, 10, 105); 
+            // Room 4 walls
+            wall(SPLIT_X_RIGHT, SPLIT_Y_MID - W12, W - SPLIT_X_RIGHT, W12);
+
+            // Corridor walls
+            wall(CORR_X1 - W12, SPLIT_Y_BOTTOM, W12, H - SPLIT_Y_BOTTOM);
+            wall(CORR_X2, SPLIT_Y_BOTTOM, W12, H - SPLIT_Y_BOTTOM);
 
             for (const w of getTexturedObjectWalls()) walls.push(w);
             return walls;
         }
 
-        function addDoorWallSegments(walls, door, wallX, wallY1, wallY2) {
+        function addDoorWallSegments(walls, door, wallFixedCoord, wallVar1, wallVar2, isHorizontal = false) {
+            if (!door) return;
+            const anim = door.openAnim || 0;
+            const dVar = isHorizontal ? door.x : door.y;
+            const dDim = isHorizontal ? door.w : door.h;
             
-            
-            const W12 = 12;
-            const anim = door ? door.openAnim : 0;
-            const dY = door.y, dH = door.h;
-            
-            if (dY > wallY1) walls.push({ x: wallX, y: wallY1, w: W12, h: dY - wallY1 });
-            if (dY + dH < wallY2) walls.push({ x: wallX, y: dY + dH, w: W12, h: wallY2 - (dY + dH) });
-            
-            if (anim < 1) {
-                const mid = dY + dH / 2, halfH = (dH / 2) * (1 - anim);
-                if (halfH > 0.5) {
-                    walls.push({ x: wallX, y: dY, w: W12, h: halfH });
-                    walls.push({ x: wallX, y: mid + halfH * (anim > 0 ? 1 : 0), w: W12, h: halfH });
-                    
+            if (isHorizontal) {
+                if (dVar > wallVar1) walls.push({ x: wallVar1, y: wallFixedCoord, w: dVar - wallVar1, h: W12 });
+                if (dVar + dDim < wallVar2) walls.push({ x: dVar + dDim, y: wallFixedCoord, w: wallVar2 - (dVar + dDim), h: W12 });
+                if (anim < 1) {
+                    const mid = dVar + dDim / 2, halfW = (dDim / 2) * (1 - anim);
+                    if (halfW > 0.5) {
+                        walls.push({ x: dVar, y: wallFixedCoord, w: halfW, h: W12 });
+                        walls.push({ x: mid + halfW * (anim > 0 ? 1 : 0), y: wallFixedCoord, w: halfW, h: W12 });
+                    }
                 }
-                if (anim === 0) walls.push({ x: wallX, y: dY, w: W12, h: dH });
-            }
-        }
-
-        function wallWithOpening(walls, dir, x1, y1, x2, center, opening) {
-            const W12 = 10;
-            const half = opening / 2;
-            const openStart = center - half, openEnd = center + half;
-            if (dir === 'horizontal') {
-                
-                if (openStart > x1) walls.push({ x: x1, y: y1, w: openStart - x1, h: W12 });
-                if (openEnd < x2) walls.push({ x: openEnd, y: y1, w: x2 - openEnd, h: W12 });
             } else {
-                
-                if (openStart > y1) walls.push({ x: x1, y: y1, w: W12, h: openStart - y1 });
-                if (openEnd < x2) walls.push({ x: x1, y: openEnd, w: W12, h: x2 - openEnd });
-            }
-        }
-
-
-        
-        function wallWithOpening2(walls, dir, x1, y1, x2, center1, center2, opening) {
-            const T = 10, half = opening / 2;
-            const o1s = center1 - half, o1e = center1 + half;
-            const o2s = center2 - half, o2e = center2 + half;
-            if (o1s > x1) walls.push({ x: x1, y: y1, w: o1s - x1, h: T });
-            if (o2s > o1e) walls.push({ x: o1e, y: y1, w: o2s - o1e, h: T });
-            if (o2e < x2) walls.push({ x: o2e, y: y1, w: x2 - o2e, h: T });
-        }
-        function clampPlayerToWorld() {
-            player.x = Math.max(W12, Math.min(W - W12 - player.width, player.x));
-            player.y = Math.max(W12, Math.min(H - W12 - player.height, player.y));
-            const walls = getWalls();
-            for (let i = 0; i < 3; i++) for (const wall of walls) resolveAABB(wall);
-            player.x = Math.max(0, Math.min(W - player.width, player.x));
-            player.y = Math.max(0, Math.min(H - player.height, player.y));
-        }
-        const W12 = 12;
-
- function updatePlayer() {
-            if (noteOpen || lockboxOpen || isTransitioning || dialogueOpen) return;
-            player.velocityX = 0; player.velocityY = 0;
-            if (keys['KeyA'] || keys['ArrowLeft']) player.velocityX = -player.speed;
-            if (keys['KeyD'] || keys['ArrowRight']) player.velocityX = player.speed;
-            if (keys['KeyW'] || keys['ArrowUp']) player.velocityY = -player.speed;
-            if (keys['KeyS'] || keys['ArrowDown']) player.velocityY = player.speed;
-            if (player.velocityX && player.velocityY) { player.velocityX *= 0.707; player.velocityY *= 0.707; }
-
-            
-            if (Math.abs(player.velocityY) >= Math.abs(player.velocityX)) {
-                if (player.velocityY < 0) player.facing = 'up';
-                else if (player.velocityY > 0) player.facing = 'down';
-            }
-            if (Math.abs(player.velocityX) > Math.abs(player.velocityY)) {
-                if (player.velocityX < 0) player.facing = 'left';
-                else if (player.velocityX > 0) player.facing = 'right';
-            }
-
-            
-            player.moving = (player.velocityX !== 0 || player.velocityY !== 0);
-            if (player.moving) {
-                player.animTimer += deltaTime;
-                if (player.animTimer >= player.animSpeed) {
-                    player.animTimer = 0;
-                    player.animFrame = 1 - player.animFrame; 
+                if (dVar > wallVar1) walls.push({ x: wallFixedCoord, y: wallVar1, w: W12, h: dVar - wallVar1 });
+                if (dVar + dDim < wallVar2) walls.push({ x: wallFixedCoord, y: dVar + dDim, w: W12, h: wallVar2 - (dVar + dDim) });
+                if (anim < 1) {
+                    const mid = dVar + dDim / 2, halfH = (dDim / 2) * (1 - anim);
+                    if (halfH > 0.5) {
+                        walls.push({ x: wallFixedCoord, y: dVar, w: W12, h: halfH });
+                        walls.push({ x: wallFixedCoord, y: mid + halfH * (anim > 0 ? 1 : 0), w: W12, h: halfH });
+                    }
                 }
-                player.idleTimer = 0;
-            } else {
-                player.animFrame = 0;
-                player.animTimer = 0;
-                player.idleTimer += deltaTime;
-            }
-
-            player.x += player.velocityX * deltaTime;
-            player.y += player.velocityY * deltaTime;
-            clampPlayerToWorld();
-        }        function updateCamera() { const lerp = 0.2 * deltaTime; camera.x += (player.x + player.width / 2 - camera.x) * lerp; camera.y += (player.y + player.height / 2 - camera.y) * lerp; const INV_OFFSET = 76; const halfW = (canvas.width / 2) / camera.zoom, halfH = (canvas.height / 2 - INV_OFFSET / 2) / camera.zoom; camera.x = Math.max(halfW, Math.min(W - halfW, camera.x)); camera.y = Math.max(halfH, Math.min(H - halfH, camera.y)); }
-        function updateDoorAnims() { for (let d of APT_DOORS) { if (d.isOpen && d.openAnim < 1) d.openAnim = Math.min(1, d.openAnim + 0.06 * deltaTime); if (!d.isOpen && d.openAnim > 0) d.openAnim = Math.max(0, d.openAnim - 0.06 * deltaTime); } }
-
-        
-        
-        
-
-        function drawCheckerboard(x, y, w, h, colA, colB, tileSize) {
-            const sx = Math.floor(x / tileSize) * tileSize, sy = Math.floor(y / tileSize) * tileSize;
-            for (let tx = sx; tx < x + w; tx += tileSize) {
-                for (let ty = sy; ty < y + h; ty += tileSize) {
-                    const inBounds = tx + tileSize > x && tx < x + w && ty + tileSize > y && ty < y + h;
-                    if (!inBounds) continue;
-                    ctx.fillStyle = ((Math.floor(tx / tileSize) + Math.floor(ty / tileSize)) % 2 === 0) ? colA : colB;
-                    const rx = Math.max(tx, x), ry = Math.max(ty, y);
-                    const rw = Math.min(tx + tileSize, x + w) - rx, rh = Math.min(ty + tileSize, y + h) - ry;
-                    ctx.fillRect(rx, ry, rw, rh);
-                }
-            }
-        }
-
-
-
-        function drawWallSegment(x, y, w, h, color, glowColor) {
-            ctx.fillStyle = color || '#333';
-            ctx.fillRect(x, y, w, h);
-            if (glowColor) {
-                ctx.shadowColor = glowColor; ctx.shadowBlur = 8;
-                ctx.strokeStyle = glowColor; ctx.lineWidth = 1.5;
-                ctx.strokeRect(x, y, w, h);
-                ctx.shadowBlur = 0;
-            }
-        }
-
-        
-        function drawRoomOverlay(room) {
-            const playerRoom = getPlayerRoom();
-            if (playerRoom !== room) {
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(room.x, room.y, room.w, room.h);
             }
         }
 
         function drawEnvironment() {
             const T = 48; 
+            const wallColor = '#000000';
 
-            
-            drawCheckerboard(0, CORR_Y1, W, CORR_Y2 - CORR_Y1, '#1a1a1a', '#', T);
-            drawCheckerboard(CORR_X1, 0, CORR_X2 - CORR_X1, H, '#1a1a1a', '#', T);
-            ctx.strokeStyle = '#333'; ctx.lineWidth = 2;
-            ctx.strokeRect(0, CORR_Y1, W, CORR_Y2 - CORR_Y1);
-            ctx.strokeRect(CORR_X1, 0, CORR_X2 - CORR_X1, H);
+            // Room 1 (Left)
+            drawCheckerboard(0, 0, SPLIT_X_LEFT, SPLIT_Y_BOTTOM, '#f4e8e8', '#e8c8c8', T);
+            const r1 = ROOMS.find(r => r.id === 'room_1');
+            if (r1) drawRoomOverlay(r1);
 
-            
-            const NW_NARROW_ROOM_W = NW_NARROW_ROOM_W_DEF;
+            // Room 2 (Middle)
+            drawCheckerboard(SPLIT_X_LEFT, SPLIT_Y_MID, SPLIT_X_RIGHT - SPLIT_X_LEFT, SPLIT_Y_BOTTOM - SPLIT_Y_MID, '#bca89f', '#a8948b', T);
+            const r2 = ROOMS.find(r => r.id === 'room_2');
+            if (r2) drawRoomOverlay(r2);
 
-            
-            drawCheckerboard(0, 0, NW_SPLIT_X, NW_SPLIT_Y, '#f4e8e8', '#e8c8c8', T);
-            ctx.strokeStyle = 'rgba(180,100,100,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(0, 0, NW_SPLIT_X, NW_SPLIT_Y);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'nw_kitchen'));
+            // Room 3 (Right)
+            drawCheckerboard(SPLIT_X_RIGHT, SPLIT_Y_MID, W - SPLIT_X_RIGHT, SPLIT_Y_BOTTOM - SPLIT_Y_MID, '#eaf4ea', '#c8e8c8', T);
+            const r3 = ROOMS.find(r => r.id === 'room_3');
+            if (r3) drawRoomOverlay(r3);
 
-            
-            const NW_ROOM_H = CORR_Y1 - NW_SPLIT_Y;
-            drawCheckerboard(0, NW_SPLIT_Y, NW_NARROW_ROOM_W, NW_ROOM_H, '#e8eef4', '#c8d8e8', T);
-            ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(0, NW_SPLIT_Y, NW_NARROW_ROOM_W, NW_ROOM_H);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'nw_newroom'));
+            // Room 4 (Top)
+            drawCheckerboard(SPLIT_X_LEFT, 0, W - SPLIT_X_LEFT, SPLIT_Y_MID, '#e8eef4', '#c8d8e8', T);
+            const r4 = ROOMS.find(r => r.id === 'room_4');
+            if (r4) drawRoomOverlay(r4);
 
-            
-            drawCheckerboard(NW_SPLIT_X, 0, CORR_X1 - NW_SPLIT_X, NW_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
-            ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(NW_SPLIT_X, 0, CORR_X1 - NW_SPLIT_X, NW_SPLIT_Y);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'nw_bedroom'));
+            // Corridor
+            drawCheckerboard(CORR_X1, SPLIT_Y_BOTTOM, CORR_X2 - CORR_X1, H - SPLIT_Y_BOTTOM, '#1a1a1a', '', T);
+            const rCorr = ROOMS.find(r => r.id === 'corridor');
+            if (rCorr) drawRoomOverlay(rCorr);
 
-            
-            const NW_LIV_X = NW_NARROW_ROOM_W, NW_LIV_Y = NW_SPLIT_Y;
-            const NW_LIV_W = CORR_X1 - NW_NARROW_ROOM_W, NW_LIV_H = CORR_Y1 - NW_SPLIT_Y;
-            ctx.fillStyle = '#bca89f'; ctx.fillRect(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H);
-            ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(NW_LIV_X, NW_LIV_Y, NW_LIV_W, NW_LIV_H);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'nw_living'));
-
-            
-            
-            drawCheckerboard(CORR_X2, 0, NE_SPLIT_X - CORR_X2, NE_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
-            ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(CORR_X2, 0, NE_SPLIT_X - CORR_X2, NE_SPLIT_Y);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'ne_bedroom'));
-            
-            drawCheckerboard(NE_SPLIT_X, 0, W - NE_SPLIT_X, NE_SPLIT_Y, '#e8eef4', '#c8d8e8', T);
-            ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(NE_SPLIT_X, 0, W - NE_SPLIT_X, NE_SPLIT_Y);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'ne_bathroom'));
-            
-            ctx.fillStyle = '#bca89f'; ctx.fillRect(CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y);
-            ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(CORR_X2, NE_SPLIT_Y, W - CORR_X2, CORR_Y1 - NE_SPLIT_Y);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'ne_living'));
-
-            
-            
-            ctx.fillStyle = '#bca89f'; ctx.fillRect(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2);
-            ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'sw_living'));
-            
-            drawCheckerboard(0, SW_SPLIT_Y, SW_SPLIT_X, H - SW_SPLIT_Y, '#e8eef4', '#c8d8e8', T);
-            ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(0, SW_SPLIT_Y, SW_SPLIT_X, H - SW_SPLIT_Y);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'sw_bathroom'));
-            
-            drawCheckerboard(SW_SPLIT_X, SW_SPLIT_Y, CORR_X1 - SW_SPLIT_X, H - SW_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
-            ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(SW_SPLIT_X, SW_SPLIT_Y, CORR_X1 - SW_SPLIT_X, H - SW_SPLIT_Y);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'sw_bedroom'));
-
-            
-            
-            ctx.fillStyle = '#bca89f'; ctx.fillRect(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2);
-            ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'se_living'));
-            
-            drawCheckerboard(CORR_X2, SE_SPLIT_Y, SE_SPLIT_X - CORR_X2, H - SE_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
-            ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(CORR_X2, SE_SPLIT_Y, SE_SPLIT_X - CORR_X2, H - SE_SPLIT_Y);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'se_bedroom'));
-            
-            drawCheckerboard(SE_SPLIT_X, SE_SPLIT_Y, W - SE_SPLIT_X, H - SE_SPLIT_Y, '#e8eef4', '#c8d8e8', T);
-            ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(SE_SPLIT_X, SE_SPLIT_Y, W - SE_SPLIT_X, H - SE_SPLIT_Y);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'se_bathroom'));
-
-            
+            // Outer walls (Black)
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, W, W12);           
             ctx.fillRect(0, H - W12, W, W12);       
             ctx.fillRect(0, 0, W12, H);           
             ctx.fillRect(W - W12, 0, W12, H);       
 
-            
-            const wallColor = '#255 255 255';
-            const wallGlow = 'rgba(200,200,200,0.4)';
-            const WT = 10;
+            // Inner walls
+            const d12 = APT_DOORS.find(d => d.id === 'door_1_2');
+            if (d12) drawAptWall(SPLIT_X_LEFT - W12, 0, SPLIT_Y_BOTTOM, d12);
+            else { ctx.fillStyle = wallColor; ctx.fillRect(SPLIT_X_LEFT - W12, 0, W12, SPLIT_Y_BOTTOM); }
 
-            
+            const d23 = APT_DOORS.find(d => d.id === 'door_2_3');
+            if (d23) drawAptWall(SPLIT_X_RIGHT, SPLIT_Y_MID, SPLIT_Y_BOTTOM, d23);
+            else { ctx.fillStyle = wallColor; ctx.fillRect(SPLIT_X_RIGHT, SPLIT_Y_MID, W12, SPLIT_Y_BOTTOM - SPLIT_Y_MID); }
+
+            const d24 = APT_DOORS.find(d => d.id === 'door_2_4');
+            if (d24) drawAptWall(SPLIT_Y_MID - W12, SPLIT_X_LEFT, SPLIT_X_RIGHT, d24, true);
+            else { ctx.fillStyle = wallColor; ctx.fillRect(SPLIT_X_LEFT, SPLIT_Y_MID - W12, SPLIT_X_RIGHT - SPLIT_X_LEFT, W12); }
+
+            const dCorr2 = APT_DOORS.find(d => d.id === 'door_corr_2');
+            if (dCorr2) drawAptWall(SPLIT_Y_BOTTOM - W12, SPLIT_X_LEFT, SPLIT_X_RIGHT, dCorr2, true);
+            else { ctx.fillStyle = wallColor; ctx.fillRect(SPLIT_X_LEFT, SPLIT_Y_BOTTOM - W12, SPLIT_X_RIGHT - SPLIT_X_LEFT, W12); }
+
+            // Other walls
             ctx.fillStyle = wallColor;
-            ctx.fillRect(NW_SPLIT_X, 0, WT, NW_SPLIT_Y);
-            ctx.fillRect(NE_SPLIT_X, 0, WT, NE_SPLIT_Y);
-            ctx.fillRect(SW_SPLIT_X, SW_SPLIT_Y, WT, H - SW_SPLIT_Y);
-            ctx.fillRect(SE_SPLIT_X, SE_SPLIT_Y, WT, H - SE_SPLIT_Y);
+            ctx.fillRect(0, SPLIT_Y_BOTTOM - W12, SPLIT_X_LEFT, W12); // Bottom room 1
+            ctx.fillRect(SPLIT_X_RIGHT, SPLIT_Y_BOTTOM - W12, W - SPLIT_X_RIGHT, W12); // Bottom room 3
+            ctx.fillRect(SPLIT_X_RIGHT, SPLIT_Y_MID - W12, W - SPLIT_X_RIGHT, W12); // Top room 3
+            
+            // Corridor walls
+            ctx.fillRect(CORR_X1 - W12, SPLIT_Y_BOTTOM, W12, H - SPLIT_Y_BOTTOM);
+            ctx.fillRect(CORR_X2, SPLIT_Y_BOTTOM, W12, H - SPLIT_Y_BOTTOM);
 
-            
-            drawWallWithOpening2('horizontal', 0, NW_SPLIT_Y, CORR_X1, NW_SPLIT_X / 2, NW_SPLIT_X + (CORR_X1 - NW_SPLIT_X) / 2, 180, wallColor, wallGlow);
-            drawWallWithOpening2('horizontal', CORR_X2, NE_SPLIT_Y, W, CORR_X2 + (NE_SPLIT_X - CORR_X2) / 2, NE_SPLIT_X + (W - NE_SPLIT_X) / 2, 180, wallColor, wallGlow);
-            drawWallWithOpening2('horizontal', 0, SW_SPLIT_Y, CORR_X1, SW_SPLIT_X / 2, SW_SPLIT_X + (CORR_X1 - SW_SPLIT_X) / 2, 180, wallColor, wallGlow);
-            drawWallWithOpening2('horizontal', CORR_X2, SE_SPLIT_Y, W, CORR_X2 + (SE_SPLIT_X - CORR_X2) / 2, SE_SPLIT_X + (W - SE_SPLIT_X) / 2, 180, wallColor, wallGlow);
-
-            
-            
-            ctx.fillStyle = wallColor; ctx.fillRect(0, CORR_Y1 - W12, CORR_X1, W12);
-            ctx.fillStyle = wallColor; ctx.fillRect(CORR_X2, CORR_Y1 - W12, W - CORR_X2, W12);
-            
-            ctx.fillStyle = wallColor; ctx.fillRect(0, CORR_Y2, CORR_X1, W12);
-            ctx.fillStyle = wallColor; ctx.fillRect(CORR_X2, CORR_Y2, W - CORR_X2, W12);
-
-            
-            drawAptWall(CORR_X1 - W12, 0, CORR_Y1, APT_DOORS.find(d => d.aptId === 'NW')); 
-            drawAptWall(CORR_X2, 0, CORR_Y1, APT_DOORS.find(d => d.aptId === 'NE'));      
-            drawAptWall(CORR_X1 - W12, CORR_Y2, H, APT_DOORS.find(d => d.aptId === 'SW')); 
-            drawAptWall(CORR_X2, CORR_Y2, H, APT_DOORS.find(d => d.aptId === 'SE'));      
-            
-            drawWallSegment(130, 300, 100, 10, '#000000', wallGlow); 
-            drawWallSegment(230, 300, 10, 105, '#000000', wallGlow); 
-            drawWallSegment(230, 496, 10, 105, '#000000', wallGlow); 
-
-            
+            // Exit Doors
             exitDoors.forEach(d => {
-                const hasKey = inventory.some(s => s && (s.id === 'key_' + d.id || s.baseId === 'key_' + d.id));
-                
-                const accessible = hasKey || d.id === 'main';
                 const cx = d.x + d.w / 2, cy = d.y + d.h / 2;
-                ctx.fillStyle = accessible ? '#1a2e1a' : '#2e1a1a'; ctx.fillRect(d.x, d.y, d.w, d.h);
-                ctx.shadowColor = accessible ? '#44ff66' : '#ff4444'; ctx.shadowBlur = 14;
-                ctx.strokeStyle = accessible ? '#44cc55' : '#cc4444'; ctx.lineWidth = 3; ctx.strokeRect(d.x, d.y, d.w, d.h);
+                ctx.fillStyle = '#1a2e1a'; ctx.fillRect(d.x, d.y, d.w, d.h);
+                ctx.shadowColor = '#44ff66'; ctx.shadowBlur = 14;
+                ctx.strokeStyle = '#44cc55'; ctx.lineWidth = 3; ctx.strokeRect(d.x, d.y, d.w, d.h);
                 ctx.shadowBlur = 0; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillStyle = accessible ? '#aaffbb' : '#ffaaaa';
-                ctx.fillText(accessible ? '🔓' : '🔒', cx, cy - 6); ctx.font = 'bold 9px monospace'; ctx.fillText(d.label, cx, cy + 7);
+                ctx.fillStyle = '#aaffbb'; ctx.fillText('🔓', cx, cy - 6); ctx.font = 'bold 9px monospace'; ctx.fillText(d.label, cx, cy + 7);
                 ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
             });
         }
 
-        function drawWallWithOpening(dir, x1, y1, x2, center, opening, color, glowColor) {
-            const T = 10; 
-            const half = opening / 2;
-            const openStart = center - half, openEnd = center + half;
-            ctx.fillStyle = color || '#222';
-            if (glowColor) { ctx.shadowColor = glowColor; ctx.shadowBlur = 6; }
-            if (dir === 'horizontal') {
-                if (openStart > x1) ctx.fillRect(x1, y1, openStart - x1, T);
-                if (openEnd < x2) ctx.fillRect(openEnd, y1, x2 - openEnd, T);
+        function drawAptWall(wallFixedCoord, wallVar1, wallVar2, door, isHorizontal = false) {
+            if (!door) return;
+            ctx.fillStyle = '#000000'; // Wall color where the door connects
+            
+            const dVar = isHorizontal ? door.x : door.y;
+            const dDim = isHorizontal ? door.w : door.h;
+
+            // Draw the solid wall parts around the door opening
+            if (isHorizontal) {
+                if (dVar > wallVar1) ctx.fillRect(wallVar1, wallFixedCoord, dVar - wallVar1, W12);
+                if (dVar + dDim < wallVar2) ctx.fillRect(dVar + dDim, wallFixedCoord, wallVar2 - (dVar + dDim), W12);
             } else {
-                if (openStart > y1) ctx.fillRect(x1, y1, T, openStart - y1);
-                if (openEnd < x2) ctx.fillRect(x1, openEnd, T, x2 - openEnd);
+                if (dVar > wallVar1) ctx.fillRect(wallFixedCoord, wallVar1, W12, dVar - wallVar1);
+                if (dVar + dDim < wallVar2) ctx.fillRect(wallFixedCoord, dVar + dDim, W12, wallVar2 - (dVar + dDim));
             }
-            ctx.shadowBlur = 0;
-        }
-
-        function drawWallWithOpening2(dir, x1, y1, x2, center1, center2, opening, color, glowColor) {
-            const T = 10, half = opening / 2;
-            const o1s = center1 - half, o1e = center1 + half;
-            const o2s = center2 - half, o2e = center2 + half;
-            ctx.fillStyle = color || '#222';
-            if (glowColor) { ctx.shadowColor = glowColor; ctx.shadowBlur = 6; }
-            if (o1s > x1) ctx.fillRect(x1, y1, o1s - x1, T);
-            if (o2s > o1e) ctx.fillRect(o1e, y1, o2s - o1e, T);
-            if (o2e < x2) ctx.fillRect(o2e, y1, x2 - o2e, T);
-            ctx.shadowBlur = 0;
-        }
-
-        function drawAptWall(wallX, wallY1, wallY2, door) {
             
-            ctx.fillStyle = '#1a1a1a';
-            const dY = door.y, dH = door.h;
-            
-            if (dY > wallY1) ctx.fillRect(wallX, wallY1, W12, dY - wallY1);
-            if (dY + dH < wallY2) ctx.fillRect(wallX, dY + dH, W12, wallY2 - (dY + dH));
-            
-            const anim = door.openAnim;
+            const anim = door.openAnim || 0;
             if (anim < 1) {
-                const mid = dY + dH / 2, halfH = (dH / 2) * (1 - anim);
-                ctx.shadowColor = '#6b3f1f'; ctx.shadowBlur = 12 * (1 - anim);
-                ctx.fillStyle = `rgba(135,90,45,${0.9 - anim * 0.8})`;
-                if (halfH > 0.5) {
-                    ctx.fillRect(wallX, dY, W12, halfH);
-                    ctx.fillRect(wallX, mid + (dH / 2) * anim, W12, halfH);
+                const mid = dVar + dDim / 2, half = (dDim / 2) * (1 - anim);
+                
+                // DOOR COLOR: Change this to adjust the color of the sliding door panels
+                ctx.fillStyle = '#ffffff'; // Default is a woody brown color
+                
+                if (isHorizontal) {
+                    ctx.fillRect(dVar, wallFixedCoord, half, W12);
+                    ctx.fillRect(mid + half * (anim > 0 ? 1 : 0), wallFixedCoord, half, W12);
+                } else {
+                    ctx.fillRect(wallFixedCoord, dVar, W12, half);
+                    ctx.fillRect(wallFixedCoord, mid + half * (anim > 0 ? 1 : 0), W12, half);
                 }
-                ctx.strokeStyle = `rgba(170,110,70,${1 - anim})`; ctx.lineWidth = 1.5;
-                if (halfH > 0.5) {
-                    ctx.strokeRect(wallX, dY, W12, halfH);
-                    ctx.strokeRect(wallX, mid + (dH / 2) * anim, W12, halfH);
-                }
-                ctx.shadowBlur = 0;
             }
-            
-            ctx.strokeStyle = `rgba(150,95,60,${0.5 * (1 - anim) + 0.1})`; ctx.lineWidth = 2;
-            ctx.strokeRect(wallX - 1, dY, W12 + 2, dH);
         }
 
         function drawSingleItem(item, bobY) {
@@ -1819,6 +1501,114 @@
         
         
         
+        function clampPlayerToWorld() {
+            player.x = Math.max(W12, Math.min(W - W12 - player.width, player.x));
+            player.y = Math.max(W12, Math.min(H - W12 - player.height, player.y));
+            const walls = getWalls();
+            for (let i = 0; i < 3; i++) for (const wall of walls) resolveAABB(wall);
+            player.x = Math.max(0, Math.min(W - player.width, player.x));
+            player.y = Math.max(0, Math.min(H - player.height, player.y));
+        }
+
+        function updatePlayer() {
+            if (noteOpen || lockboxOpen || isTransitioning || dialogueOpen) return;
+            player.velocityX = 0; player.velocityY = 0;
+            if (keys['KeyA'] || keys['ArrowLeft']) player.velocityX = -player.speed;
+            if (keys['KeyD'] || keys['ArrowRight']) player.velocityX = player.speed;
+            if (keys['KeyW'] || keys['ArrowUp']) player.velocityY = -player.speed;
+            if (keys['KeyS'] || keys['ArrowDown']) player.velocityY = player.speed;
+            if (player.velocityX && player.velocityY) { player.velocityX *= 0.707; player.velocityY *= 0.707; }
+
+            if (Math.abs(player.velocityY) >= Math.abs(player.velocityX)) {
+                if (player.velocityY < 0) player.facing = 'up';
+                else if (player.velocityY > 0) player.facing = 'down';
+            }
+            if (Math.abs(player.velocityX) > Math.abs(player.velocityY)) {
+                if (player.velocityX < 0) player.facing = 'left';
+                else if (player.velocityX > 0) player.facing = 'right';
+            }
+
+            player.moving = (player.velocityX !== 0 || player.velocityY !== 0);
+            if (player.moving) {
+                player.animTimer += deltaTime;
+                if (player.animTimer >= player.animSpeed) {
+                    player.animTimer = 0;
+                    player.animFrame = 1 - player.animFrame; 
+                }
+                player.idleTimer = 0;
+            } else {
+                player.animFrame = 0;
+                player.animTimer = 0;
+                player.idleTimer += deltaTime;
+            }
+
+            player.x += player.velocityX * deltaTime;
+            player.y += player.velocityY * deltaTime;
+            clampPlayerToWorld();
+        }
+
+        function updateCamera() { 
+            const lerp = 0.2 * deltaTime; 
+            camera.x += (player.x + player.width / 2 - camera.x) * lerp; 
+            camera.y += (player.y + player.height / 2 - camera.y) * lerp; 
+            const INV_OFFSET = 76; 
+            const halfW = (canvas.width / 2) / camera.zoom, halfH = (canvas.height / 2 - INV_OFFSET / 2) / camera.zoom; 
+            
+            // If the world is smaller than the screen view, center it perfectly
+            if (W < halfW * 2) {
+                camera.x = W / 2;
+            } else {
+                camera.x = Math.max(halfW, Math.min(W - halfW, camera.x)); 
+            }
+
+            if (H < halfH * 2) {
+                camera.y = H / 2;
+            } else {
+                camera.y = Math.max(halfH, Math.min(H - halfH, camera.y)); 
+            }
+        }
+
+        function updateDoorAnims() { 
+            for (let d of APT_DOORS) { 
+                if (d.isOpen && d.openAnim < 1) d.openAnim = Math.min(1, d.openAnim + 0.06 * deltaTime); 
+                if (!d.isOpen && d.openAnim > 0) d.openAnim = Math.max(0, d.openAnim - 0.06 * deltaTime); 
+            } 
+        }
+
+        function drawCheckerboard(x, y, w, h, colA, colB, tileSize) {
+            const sx = Math.floor(x / tileSize) * tileSize, sy = Math.floor(y / tileSize) * tileSize;
+            for (let tx = sx; tx < x + w; tx += tileSize) {
+                for (let ty = sy; ty < y + h; ty += tileSize) {
+                    const inBounds = tx + tileSize > x && tx < x + w && ty + tileSize > y && ty < y + h;
+                    if (!inBounds) continue;
+                    ctx.fillStyle = ((Math.floor(tx / tileSize) + Math.floor(ty / tileSize)) % 2 === 0) ? colA : colB;
+                    const rx = Math.max(tx, x), ry = Math.max(ty, y);
+                    const rw = Math.min(tx + tileSize, x + w) - rx, rh = Math.min(ty + tileSize, y + h) - ry;
+                    ctx.fillRect(rx, ry, rw, rh);
+                }
+            }
+        }
+
+        function drawWallSegment(x, y, w, h, color, glowColor) {
+            ctx.fillStyle = color || '#333';
+            ctx.fillRect(x, y, w, h);
+            if (glowColor) {
+                ctx.shadowColor = glowColor; ctx.shadowBlur = 8;
+                ctx.strokeStyle = glowColor; ctx.lineWidth = 1.5;
+                ctx.strokeRect(x, y, w, h);
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function drawRoomOverlay(room) {
+            const playerRoom = getPlayerRoom();
+            if (!playerRoom || playerRoom.id !== room.id) {
+                // Temporarily make it semi-transparent for debugging
+                ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+                ctx.fillRect(room.x, room.y, room.w, room.h);
+            }
+        }
+
         let lastTime = performance.now(), deltaTime = 1;
 
 
