@@ -530,7 +530,7 @@
         
         
 
-        const W = 2200, H = 1600;
+        const W = 2200, H = 950;
         const CORR_Y1 = 613, CORR_Y2 = 975, CORR_X1 = 925, CORR_X2 = 1275;
         
         const NW_SPLIT_X = 462, NW_SPLIT_Y = 300;
@@ -965,13 +965,7 @@
             { id: 'ne_bathroom', x: NE_SPLIT_X, y: 0, w: W - NE_SPLIT_X, h: NE_SPLIT_Y },
             { id: 'ne_living', x: CORR_X2, y: NE_SPLIT_Y, w: W - CORR_X2, h: CORR_Y1 - NE_SPLIT_Y },
             
-            { id: 'sw_living', x: 0, y: CORR_Y2, w: CORR_X1, h: SW_SPLIT_Y - CORR_Y2 },
-            { id: 'sw_bathroom', x: 0, y: SW_SPLIT_Y, w: SW_SPLIT_X, h: H - SW_SPLIT_Y },
-            { id: 'sw_bedroom', x: SW_SPLIT_X, y: SW_SPLIT_Y, w: CORR_X1 - SW_SPLIT_X, h: H - SW_SPLIT_Y },
-            
-            { id: 'se_living', x: CORR_X2, y: CORR_Y2, w: W - CORR_X2, h: SE_SPLIT_Y - CORR_Y2 },
-            { id: 'se_bedroom', x: CORR_X2, y: SE_SPLIT_Y, w: SE_SPLIT_X - CORR_X2, h: H - SE_SPLIT_Y },
-            { id: 'se_bathroom', x: SE_SPLIT_X, y: SE_SPLIT_Y, w: W - SE_SPLIT_X, h: H - SE_SPLIT_Y },
+           
         ];
 
         
@@ -1436,37 +1430,10 @@
 
             
             
-            drawCheckerboard(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2, '#bca89f', '#e0e0e0', T);
-            ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(0, CORR_Y2, CORR_X1, SW_SPLIT_Y - CORR_Y2);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'sw_living'));
-            
-            drawCheckerboard(0, SW_SPLIT_Y, SW_SPLIT_X, H - SW_SPLIT_Y, '#e8eef4', '#c8d8e8', T);
-            ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(0, SW_SPLIT_Y, SW_SPLIT_X, H - SW_SPLIT_Y);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'sw_bathroom'));
-            
-            drawCheckerboard(SW_SPLIT_X, SW_SPLIT_Y, CORR_X1 - SW_SPLIT_X, H - SW_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
-            ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(SW_SPLIT_X, SW_SPLIT_Y, CORR_X1 - SW_SPLIT_X, H - SW_SPLIT_Y);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'sw_bedroom'));
-
             
             
-            drawCheckerboard(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2, '#bca89f', '#e0e0e0', T);
-            ctx.strokeStyle = 'rgba(120,120,120,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(CORR_X2, CORR_Y2, W - CORR_X2, SE_SPLIT_Y - CORR_Y2);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'se_living'));
             
-            drawCheckerboard(CORR_X2, SE_SPLIT_Y, SE_SPLIT_X - CORR_X2, H - SE_SPLIT_Y, '#eaf4ea', '#c8e8c8', T);
-            ctx.strokeStyle = 'rgba(80,150,80,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(CORR_X2, SE_SPLIT_Y, SE_SPLIT_X - CORR_X2, H - SE_SPLIT_Y);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'se_bedroom'));
             
-            drawCheckerboard(SE_SPLIT_X, SE_SPLIT_Y, W - SE_SPLIT_X, H - SE_SPLIT_Y, '#e8eef4', '#c8d8e8', T);
-            ctx.strokeStyle = 'rgba(100,140,180,0.4)'; ctx.lineWidth = 1;
-            ctx.strokeRect(SE_SPLIT_X, SE_SPLIT_Y, W - SE_SPLIT_X, H - SE_SPLIT_Y);
-            drawRoomOverlay(ROOMS.find(r => r.id === 'se_bathroom'));
 
             
             ctx.fillStyle = '#000000';
