@@ -21,23 +21,22 @@
       align-items: center;
       font-family: 'Georgia', serif;
       overflow: hidden;
-      background: linear-gradient(135deg, #000000 0%, #1a1a1a 25%, #0d0d0d 50%, #1a1a1a 75%, #000000 100%);
       position: relative;
+
+      background-image: url('assets/BG.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
     }
 
     body::before {
       content: '';
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background:
-        radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 80% 50%, rgba(200, 200, 200, 0.08) 0%, transparent 50%);
-      animation: glow 8s ease-in-out infinite;
-      pointer-events: none;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
       z-index: 0;
+      pointer-events: none;
     }
 
     @keyframes glow {
@@ -185,7 +184,7 @@
       z-index: 1;
     }
 
-    
+
     #controls-backdrop {
       position: fixed;
       inset: 0;
@@ -201,7 +200,7 @@
       pointer-events: all;
     }
 
-    
+
     #controls-modal {
       position: fixed;
       top: 50%;
@@ -226,7 +225,7 @@
       transform: translate(-50%, -50%) scale(1);
     }
 
-    
+
     .modal-titlebar {
       display: flex;
       align-items: center;
@@ -265,7 +264,7 @@
       background: rgba(255, 255, 255, 0.08);
     }
 
-    
+
     .modal-body {
       padding: 28px 32px 32px;
     }
@@ -344,6 +343,20 @@
       font-family: monospace;
       letter-spacing: 1px;
     }
+
+    #fade-screen {
+      position: fixed;
+      inset: 0;
+      background: black;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transition: opacity 1s ease;
+    }
+
+    #fade-screen.active {
+      opacity: 1;
+    }
   </style>
 </head>
 
@@ -356,16 +369,17 @@
     </div>
 
     <div class="menu">
-      <button class="menu-button" onclick="window.location.href='level_main.html'">Play</button>
+      <button class="menu-button" onclick="startGame()">
+        Play
+      </button>
       <button class="menu-button" onclick="openControls()">Controls</button>
-      <button class="menu-button">Quit Game</button>
     </div>
   </div>
 
   <div class="version">v.Alpha</div>
   <div class="footer">Created by OliFil Studio</div>
 
-  
+
   <div id="controls-backdrop" onclick="closeControls()"></div>
 
   <div id="controls-modal">
@@ -422,6 +436,12 @@
             <span class="key">ESC</span>
           </div>
         </div>
+        <div class="control-row">
+          <span class="control-label">Open objectives</span>
+          <div class="control-keys">
+            <span class="key">O</span>
+          </div>
+        </div>
       </div>
 
       <div class="controls-section">
@@ -436,7 +456,7 @@
         </div>
       </div>
 
-     
+
 
     </div>
 
@@ -449,29 +469,40 @@
     <source src="Music/Hollow Knight OST - Title Theme.mp3" type="audio/mpeg">
   </audio>
 
-  <script>
-    let musicStarted = false;
-    document.addEventListener('click', () => {
-      if (!musicStarted) {
-        document.getElementById('bgMusic').play().catch(() => { });
-        musicStarted = true;
-      }
-    });
-
-    function openControls() {
-      document.getElementById('controls-backdrop').classList.add('open');
-      document.getElementById('controls-modal').classList.add('open');
-    }
-
-    function closeControls() {
-      document.getElementById('controls-backdrop').classList.remove('open');
-      document.getElementById('controls-modal').classList.remove('open');
-    }
-
-    document.addEventListener('keydown', e => {
-      if (e.code === 'Escape') closeControls();
-    });
-  </script>
+  <div id="fade-screen"></div>
 </body>
+<script>
+  let musicStarted = false;
+  document.addEventListener('click', () => {
+    if (!musicStarted) {
+      document.getElementById('bgMusic').play().catch(() => { });
+      musicStarted = true;
+    }
+  });
+
+  function openControls() {
+    document.getElementById('controls-backdrop').classList.add('open');
+    document.getElementById('controls-modal').classList.add('open');
+  }
+
+  function closeControls() {
+    document.getElementById('controls-backdrop').classList.remove('open');
+    document.getElementById('controls-modal').classList.remove('open');
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Escape') closeControls();
+  });
+
+  function startGame() {
+  const fade = document.getElementById('fade-screen');
+
+  fade.classList.add('active');
+
+  setTimeout(() => {
+    window.location.href = 'level_main.html';
+  }, 2000); 
+}
+</script>
 
 </html>
