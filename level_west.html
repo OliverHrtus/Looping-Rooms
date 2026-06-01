@@ -132,8 +132,15 @@
         }
 
         @keyframes blink {
-            0%, 100% { opacity: 1 }
-            50% { opacity: 0 }
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0
+            }
         }
 
         #dialogue-hint {
@@ -305,8 +312,13 @@
             letter-spacing: 1px;
         }
 
-        .lb-msg.error { color: #ff4444; }
-        .lb-msg.success { color: #44ff88; }
+        .lb-msg.error {
+            color: #ff4444;
+        }
+
+        .lb-msg.success {
+            color: #44ff88;
+        }
 
         .lb-close-hint {
             margin-top: 12px;
@@ -332,7 +344,9 @@
             z-index: 10;
         }
 
-        #pickup-prompt.visible { opacity: 1; }
+        #pickup-prompt.visible {
+            opacity: 1;
+        }
 
         #door-msg {
             position: absolute;
@@ -353,7 +367,9 @@
             white-space: nowrap;
         }
 
-        #door-msg.visible { opacity: 1; }
+        #door-msg.visible {
+            opacity: 1;
+        }
 
         #fade-overlay {
             position: fixed;
@@ -387,7 +403,9 @@
             z-index: 10;
         }
 
-        #active-item-label.visible { opacity: 1; }
+        #active-item-label.visible {
+            opacity: 1;
+        }
 
         /* ── Objectives panel (from level_main) ── */
         #objectives-panel {
@@ -404,7 +422,9 @@
             font-family: 'VT323', 'Courier New', monospace;
         }
 
-        #objectives-panel.open { right: 20px; }
+        #objectives-panel.open {
+            right: 20px;
+        }
 
         #objectives-panel h3 {
             margin: 0 0 12px 0;
@@ -425,15 +445,23 @@
             line-height: 1.3;
         }
 
-        .obj-entry.hidden { display: none; }
+        .obj-entry.hidden {
+            display: none;
+        }
 
         .obj-entry.complete .obj-text {
             color: #555;
             text-decoration: line-through;
         }
 
-        .obj-icon { flex-shrink: 0; margin-top: 2px; }
-        .obj-text { color: #ddd; }
+        .obj-icon {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .obj-text {
+            color: #ddd;
+        }
 
         #obj-toggle-hint {
             position: absolute;
@@ -470,8 +498,8 @@
 <body>
     <canvas id="gameCanvas"></canvas>
 
-    
-   
+
+
 
     <!-- Objectives (from level_main) -->
     <div id="obj-toggle-hint">[O] Objectives</div>
@@ -481,16 +509,26 @@
     </div>
 
     <div id="inventory">
-        <div class="inv-slot active" id="slot-0"><span class="slot-key">1</span><span class="item-icon" id="icon-0"></span><span class="item-count" id="count-0"></span></div>
-        <div class="inv-slot" id="slot-1"><span class="slot-key">2</span><span class="item-icon" id="icon-1"></span><span class="item-count" id="count-1"></span></div>
-        <div class="inv-slot" id="slot-2"><span class="slot-key">3</span><span class="item-icon" id="icon-2"></span><span class="item-count" id="count-2"></span></div>
-        <div class="inv-slot" id="slot-3"><span class="slot-key">4</span><span class="item-icon" id="icon-3"></span><span class="item-count" id="count-3"></span></div>
-        <div class="inv-slot" id="slot-4"><span class="slot-key">5</span><span class="item-icon" id="icon-4"></span><span class="item-count" id="count-4"></span></div>
-        <div class="inv-slot" id="slot-5"><span class="slot-key">6</span><span class="item-icon" id="icon-5"></span><span class="item-count" id="count-5"></span></div>
-        <div class="inv-slot" id="slot-6"><span class="slot-key">7</span><span class="item-icon" id="icon-6"></span><span class="item-count" id="count-6"></span></div>
-        <div class="inv-slot" id="slot-7"><span class="slot-key">8</span><span class="item-icon" id="icon-7"></span><span class="item-count" id="count-7"></span></div>
-        <div class="inv-slot" id="slot-8"><span class="slot-key">9</span><span class="item-icon" id="icon-8"></span><span class="item-count" id="count-8"></span></div>
-        <div class="inv-slot" id="slot-9"><span class="slot-key">0</span><span class="item-icon" id="icon-9"></span><span class="item-count" id="count-9"></span></div>
+        <div class="inv-slot active" id="slot-0"><span class="slot-key">1</span><span class="item-icon"
+                id="icon-0"></span><span class="item-count" id="count-0"></span></div>
+        <div class="inv-slot" id="slot-1"><span class="slot-key">2</span><span class="item-icon"
+                id="icon-1"></span><span class="item-count" id="count-1"></span></div>
+        <div class="inv-slot" id="slot-2"><span class="slot-key">3</span><span class="item-icon"
+                id="icon-2"></span><span class="item-count" id="count-2"></span></div>
+        <div class="inv-slot" id="slot-3"><span class="slot-key">4</span><span class="item-icon"
+                id="icon-3"></span><span class="item-count" id="count-3"></span></div>
+        <div class="inv-slot" id="slot-4"><span class="slot-key">5</span><span class="item-icon"
+                id="icon-4"></span><span class="item-count" id="count-4"></span></div>
+        <div class="inv-slot" id="slot-5"><span class="slot-key">6</span><span class="item-icon"
+                id="icon-5"></span><span class="item-count" id="count-5"></span></div>
+        <div class="inv-slot" id="slot-6"><span class="slot-key">7</span><span class="item-icon"
+                id="icon-6"></span><span class="item-count" id="count-6"></span></div>
+        <div class="inv-slot" id="slot-7"><span class="slot-key">8</span><span class="item-icon"
+                id="icon-7"></span><span class="item-count" id="count-7"></span></div>
+        <div class="inv-slot" id="slot-8"><span class="slot-key">9</span><span class="item-icon"
+                id="icon-8"></span><span class="item-count" id="count-8"></span></div>
+        <div class="inv-slot" id="slot-9"><span class="slot-key">0</span><span class="item-icon"
+                id="icon-9"></span><span class="item-count" id="count-9"></span></div>
     </div>
     <div id="active-item-label"></div>
     <div id="pickup-prompt"></div>
@@ -538,12 +576,23 @@
         <div class="lb-close-hint">Press ESC to close</div>
     </div>
 
-    <script>
+    <audio id="bgMusic" loop>
+        <source src="Music/bq_music.mp3" type="audio/mpeg">
+    </audio>
 
-        
+    <script>
+        let musicStarted = false;
+        document.addEventListener('click', () => {
+            if (!musicStarted) {
+                document.getElementById('bgMusic').play().catch(() => { });
+                musicStarted = true;
+            }
+        });
+
+
         const dialoguePanel = document.getElementById('dialogue-panel');
-        const dialogueText  = document.getElementById('dialogue-text');
-        const dialogueHint  = document.getElementById('dialogue-hint');
+        const dialogueText = document.getElementById('dialogue-text');
+        const dialogueHint = document.getElementById('dialogue-hint');
         let dialogueOpen = false, dialoguePages = [], dialoguePage = 0;
         let dialogueCloseCallback = null;
         let typewriterTimer = null, typewriterDone = false, typewriterChars = 0;
@@ -553,7 +602,7 @@
         function advanceDialogue() { if (!dialogueOpen) return; if (!typewriterDone) { clearInterval(typewriterTimer); typewriterDone = true; dialogueText.textContent = dialoguePages[dialoguePage]; const cursor = document.createElement('span'); cursor.id = 'dialogue-cursor'; dialogueText.appendChild(cursor); return; } dialoguePage++; if (dialoguePage >= dialoguePages.length) { closeDialogue(); } else { showPage(dialoguePage); } }
         function closeDialogue() { clearInterval(typewriterTimer); dialogueOpen = false; dialoguePanel.classList.remove('visible'); dialogueText.textContent = ''; if (typeof dialogueCloseCallback === 'function') { const callback = dialogueCloseCallback; dialogueCloseCallback = null; callback(); } }
 
-        
+
         const W = 2200, H = 1600;
         const CORR_Y1 = 613, CORR_Y2 = 975, CORR_X1 = 925, CORR_X2 = 1275;
         const NW_SPLIT_X = 462, NW_SPLIT_Y = 300;
@@ -576,7 +625,7 @@
             { id: 'main', x: 2180, y: 760, w: 20, h: 80, label: 'M' },
         ];
 
-        
+
         const LOCK_CODE = '6658';
         const lbDigits = [0, 0, 0, 0];
         const lbNumEls = [document.getElementById('dn0'), document.getElementById('dn1'), document.getElementById('dn2'), document.getElementById('dn3')];
@@ -593,7 +642,7 @@
             } else { msg.textContent = '✗ Wrong code'; msg.className = 'lb-msg error'; }
         });
 
-        
+
         const INVENTORY_SIZE = 10;
         const inventory = Array(INVENTORY_SIZE).fill(null);
         let activeSlot = 0;
@@ -631,14 +680,15 @@
             return true;
         }
 
-        
+
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
-        
+
         const texturedObjects = [
             { id: 'nw_fridge', x: 20, y: 20, width: 60, height: 100, texture: 'assets/fridge.png', label: 'Fridge', solid: true, dialogue: ['* A large fridge humming quietly.', '* The door is slightly ajar.', '* Inside, you see a faint glint of something metallic.'] },
+            { id: 'nw_sink_kitchen', x: 105, y: 20, width: 50, height: 40, texture: 'assets/kitchen_sink.png', label: 'Kitchen Sink', solid: true, dialogue: ['* A kitchen sink with a rusty faucet.', '* The cabinet below is slightly open.'] },
             { id: 'nw_oven', x: 180, y: 20, width: 70, height: 60, texture: 'assets/oven.png', emptyTexture: 'assets/oven_empty.png', label: 'Oven', solid: true, dialogue: ['* A dusty oven with a broken door.', '* It seems to be stuck shut.', '* Maybe there is something inside?'] },
             { id: 'nw_washing_machine', x: 300, y: 20, width: 70, height: 60, texture: 'assets/washing_machine.png', label: 'Washing Machine', solid: true, dialogue: ['* An old washing machine.'] },
             { id: 'nw_cabinet', x: 380, y: 170, width: 80, height: 100, texture: 'assets/cabinet.png', emptyTexture: 'assets/cabinet.png', label: 'Kitchen Cabinet', solid: true, dialogue: ['* A wooden kitchen cabinet.', '* The doors are closed.', '* You can see a small screwdriver lying on one of the shelves.'], isCustomPuzzle: true, requiresItem: 'key_kitchen_cabinet', unlocked: false, itemTaken: false, containsItem: { id: 'key_liqor', icon: '🔑', label: 'Liquor Cabinet Key' } },
@@ -649,7 +699,7 @@
             { id: 'nw_sink', x: 145, y: 330, width: 80, height: 60, texture: 'assets/sink.png', label: 'Sink', solid: true, dialogue: ['* A bathroom sink with a mirror above it.', '* The faucet drips occasionally.'] },
             { id: 'nw_toilet', x: 10, y: 450, width: 60, height: 60, texture: 'assets/toilet.png', label: 'Toilet', solid: true, dialogue: ['* A simple toilet.'] },
             { id: 'nw_shower', x: 30, y: 530, width: 60, height: 60, texture: 'assets/shower.png', label: 'Shower', solid: true, dialogue: ['* A shower stall with a glass door.', '* The tiles are cracked and moldy.'] },
-            { id: 'nw_mirror', x: 250, y: 530, width: 60, height: 60, texture: 'assets/mirror.png', label: 'Mirror', solid: true, dialogue: ['* A large wall mirror.', '* You notice something odd about the corners.'] },
+            { id: 'nw_mirror', x: 250, y: 530, width: 60, height: 60, texture: 'assets/mirror_withoutitem.png', label: 'Mirror', solid: true, dialogue: ['* A large wall mirror.', '* You notice something odd about the corners.'] },
             { id: 'nw_tv', x: 370, y: 318, width: 180, height: 80, texture: 'assets/tv_withoutkey.png', label: 'TV', solid: true, dialogue: ['* A modern TV.', '* It is plugged in and seems to be working.'] },
             { id: 'nw_rug', x: 370, y: 430, width: 100, height: 55, solid: false, texture: 'assets/rug.png', label: 'Rug', dialogue: ['* A faded rug with an intricate pattern.'] },
             { id: 'nw_couch', x: 380, y: 520, width: 160, height: 65, texture: 'assets/couch.png', label: 'Couch', solid: true, dialogue: ['* A comfortable couch.', '* There is a small book on the seat.'] },
@@ -669,7 +719,7 @@
             { id: 'puzzle_lockbox', x: 1310, y: 540, width: 40, height: 40, texture: 'assets/small_box.png', emptyTexture: 'assets/small_box_empty.png', label: 'Lock Box', solid: true, isCustomPuzzle: true, requiresItem: 'key_lockbox', unlocked: false, itemTaken: false, containsItem: { id: 'key_north', icon: '🔑', label: 'North Key' }, dialogue: ['* A small wooden box with a sturdy brass padlock.', '* It needs a specific key to open.'] },
         ];
 
-        
+
         const _texCache = {};
         function loadTextures() {
             for (const obj of texturedObjects) {
@@ -678,17 +728,17 @@
             }
         }
 
-        
+
         function saveWorldItemState() { try { const s = {}; texturedObjects.forEach(i => { if (i.collected) s[i.id] = true; }); sessionStorage.setItem('looping_rooms_world_items', JSON.stringify(s)); } catch (e) { } }
         function loadWorldItemState() { try { const raw = sessionStorage.getItem('looping_rooms_world_items'); if (!raw) return; const s = JSON.parse(raw); texturedObjects.forEach(i => { if (s[i.id]) i.collected = true; }); } catch (e) { } }
 
-        
+
         let timerActive = false;
         let timerStartTime = 0;
         let timerElapsedTime = 0;
         const timerEl = document.getElementById('game-timer');
 
-        
+
         function getSpawnPosition() { try { const from = sessionStorage.getItem('looping_rooms_entry_door'); if (from === 'north') return { x: 1084, y: 60 }; if (from === 'south') return { x: 1084, y: 1508 }; if (from === 'west') return { x: 2900, y: 784 }; if (from === 'east') return { x: 2108, y: 784 }; } catch (e) { } return { x: 2140, y: 760 }; }
         const _spawn = getSpawnPosition();
         const player = {
@@ -699,12 +749,12 @@
         };
         const camera = { x: player.x, y: player.y, zoom: 1.4 };
 
-       
+
         const SPRITE_COLS = 6;
         const SPRITE_ROWS = 4;
         const SPRITE_IMG_W = 887;
         const SPRITE_IMG_H = 1774;
-        const FRAME_W = Math.floor(SPRITE_IMG_W / SPRITE_COLS);  
+        const FRAME_W = Math.floor(SPRITE_IMG_W / SPRITE_COLS);
         const FRAME_H = Math.floor(SPRITE_IMG_H / SPRITE_ROWS) - 20;
 
         const PLAYER_SPRITE = {
@@ -715,14 +765,14 @@
             offsetX: 0,
             offsetY: 0,
             anims: {
-                idle_down:  { row: 0, col: 0, frames: 1, fps: 4 },
-                walk_down:  { row: 0, col: 1, frames: 5, fps: 9 },
+                idle_down: { row: 0, col: 0, frames: 1, fps: 4 },
+                walk_down: { row: 0, col: 1, frames: 5, fps: 9 },
                 idle_right: { row: 2, col: 0, frames: 1, fps: 4 },
                 walk_right: { row: 2, col: 1, frames: 5, fps: 9 },
-                idle_left:  { row: 1, col: 0, frames: 1, fps: 4 },
-                walk_left:  { row: 1, col: 1, frames: 5, fps: 9 },
-                idle_up:    { row: 3, col: 0, frames: 1, fps: 4 },
-                walk_up:    { row: 3, col: 1, frames: 5, fps: 9 },
+                idle_left: { row: 1, col: 0, frames: 1, fps: 4 },
+                walk_left: { row: 1, col: 1, frames: 5, fps: 9 },
+                idle_up: { row: 3, col: 0, frames: 1, fps: 4 },
+                walk_up: { row: 3, col: 1, frames: 5, fps: 9 },
             },
             _img: null, _ready: false, _animKey: 'idle_down', _frame: 0, _elapsed: 0,
         };
@@ -730,14 +780,14 @@
         (function loadPlayerSprite() {
             if (!PLAYER_SPRITE.src) return;
             const img = new Image();
-            img.onload  = () => { PLAYER_SPRITE._img = img; PLAYER_SPRITE._ready = true; };
+            img.onload = () => { PLAYER_SPRITE._img = img; PLAYER_SPRITE._ready = true; };
             img.onerror = () => { console.warn('[Spritesheet] Failed to load:', PLAYER_SPRITE.src); };
             img.src = PLAYER_SPRITE.src;
         })();
 
         function updateSpriteAnim(dtSeconds) {
             if (!PLAYER_SPRITE._ready) return;
-            const key  = (player.moving ? 'walk_' : 'idle_') + player.facing;
+            const key = (player.moving ? 'walk_' : 'idle_') + player.facing;
             const anim = PLAYER_SPRITE.anims[key] || PLAYER_SPRITE.anims['idle_down'];
             if (PLAYER_SPRITE._animKey !== key) { PLAYER_SPRITE._animKey = key; PLAYER_SPRITE._frame = 0; PLAYER_SPRITE._elapsed = 0; }
             PLAYER_SPRITE._elapsed += dtSeconds;
@@ -746,18 +796,18 @@
         }
 
         function drawSpritePlayer() {
-            const key  = PLAYER_SPRITE._animKey;
+            const key = PLAYER_SPRITE._animKey;
             const anim = PLAYER_SPRITE.anims[key] || PLAYER_SPRITE.anims['idle_down'];
             const srcX = (anim.col + PLAYER_SPRITE._frame) * PLAYER_SPRITE.frameW;
             const srcY = anim.row * PLAYER_SPRITE.frameH;
-            const dw   = PLAYER_SPRITE.frameW * PLAYER_SPRITE.scale;
-            const dh   = PLAYER_SPRITE.frameH * PLAYER_SPRITE.scale;
-            const dx   = player.x + player.width  / 2 - dw / 2;
-            const dy   = player.y + player.height / 10 - dh / 2;
+            const dw = PLAYER_SPRITE.frameW * PLAYER_SPRITE.scale;
+            const dh = PLAYER_SPRITE.frameH * PLAYER_SPRITE.scale;
+            const dx = player.x + player.width / 2 - dw / 2;
+            const dy = player.y + player.height / 10 - dh / 2;
             ctx.drawImage(PLAYER_SPRITE._img, srcX, srcY, PLAYER_SPRITE.frameW, PLAYER_SPRITE.frameH, dx, dy, dw, dh);
         }
 
-        
+
         function getPlayerApt() { const px = player.x + player.width / 2, py = player.y + player.height / 2; if (px < CORR_X1 && py < CORR_Y1) return 'NW'; if (px > CORR_X2 && py < CORR_Y1) return 'NE'; if (px < CORR_X1 && py > CORR_Y2) return 'SW'; if (px > CORR_X2 && py > CORR_Y2) return 'SE'; return null; }
         let lastPlayerApt = null;
         function updateDoorLogic() {
@@ -769,28 +819,28 @@
             }
         }
 
-        
+
         const noteModal = document.getElementById('note-modal');
         let noteOpen = false;
         function openNote(item) { document.getElementById('note-title').textContent = item.noteTitle; document.getElementById('note-content').textContent = item.noteContent; noteModal.style.display = 'block'; requestAnimationFrame(() => noteModal.classList.add('open')); noteOpen = true; }
         function closeNote() { noteModal.classList.remove('open'); setTimeout(() => { noteModal.style.display = 'none'; }, 200); noteOpen = false; }
 
-        
+
         const lockboxModal = document.getElementById('lockbox-modal');
         let lockboxOpen = false, currentLockbox = null;
         function openLockbox(item) { currentLockbox = item; lbDigits.fill(0); lbNumEls.forEach(el => el.textContent = '0'); const msg = document.getElementById('lb-msg'); msg.textContent = ''; msg.className = 'lb-msg'; document.getElementById('lb-icon').textContent = item.unlocked ? '📭' : '📦'; lockboxModal.style.display = 'block'; requestAnimationFrame(() => lockboxModal.classList.add('open')); lockboxOpen = true; }
         function closeLockbox() { lockboxModal.classList.remove('open'); setTimeout(() => { lockboxModal.style.display = 'none'; }, 200); lockboxOpen = false; currentLockbox = null; }
 
-        
+
         const fadeOverlay = document.getElementById('fade-overlay');
         let isTransitioning = false;
         function fadeToLevel(url, exitDoorId) { if (isTransitioning) return; saveInventory(); saveWorldItemState(); try { sessionStorage.setItem('looping_rooms_in_transition', '1'); if (exitDoorId) sessionStorage.setItem('looping_rooms_entry_door', exitDoorId); } catch (e) { } isTransitioning = true; fadeOverlay.classList.add('fading'); setTimeout(() => { window.location.href = url; }, 2000); }
 
-        
+
         const objectFlashes = {};
         function flashObject(obj) { objectFlashes[obj.id] = { timer: 1.0 }; }
 
-       
+
         const keys = {};
         document.addEventListener('keydown', e => {
             if (dialogueOpen && (e.code === 'KeyE' || e.code === 'KeyZ' || e.code === 'Space')) { e.preventDefault(); advanceDialogue(); return; }
@@ -809,7 +859,7 @@
         document.addEventListener('keyup', e => keys[e.code] = false);
         window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 
-        
+
         const pickupPromptEl = document.getElementById('pickup-prompt');
         const feedbacks = [];
         const droppedItems = [];
@@ -817,22 +867,22 @@
 
         function rectOverlap(ax, ay, aw, ah, bx, by, bw, bh) { return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by; }
 
-        
+
         const NW_NARROW_ROOM_W_DEF = 240;
         const ROOMS = [
-            { id: 'nw_kitchen',  x: 0,                   y: 0,         w: NW_SPLIT_X,                       h: NW_SPLIT_Y },
-            { id: 'nw_newroom',  x: 0,                   y: NW_SPLIT_Y, w: NW_NARROW_ROOM_W_DEF,             h: CORR_Y1 - NW_SPLIT_Y },
-            { id: 'nw_bedroom',  x: NW_SPLIT_X,          y: 0,          w: CORR_X1 - NW_SPLIT_X,            h: NW_SPLIT_Y },
-            { id: 'nw_living',   x: NW_NARROW_ROOM_W_DEF, y: NW_SPLIT_Y, w: CORR_X1 - NW_NARROW_ROOM_W_DEF, h: CORR_Y1 - NW_SPLIT_Y },
-            { id: 'ne_bedroom',  x: CORR_X2,             y: 0,          w: NE_SPLIT_X - CORR_X2,            h: NE_SPLIT_Y },
-            { id: 'ne_bathroom', x: NE_SPLIT_X,          y: 0,          w: W - NE_SPLIT_X,                  h: NE_SPLIT_Y },
-            { id: 'ne_living',   x: CORR_X2,             y: NE_SPLIT_Y, w: W - CORR_X2,                     h: CORR_Y1 - NE_SPLIT_Y },
-            { id: 'sw_living',   x: 0,                   y: CORR_Y2,    w: CORR_X1,                         h: SW_SPLIT_Y - CORR_Y2 },
-            { id: 'sw_bathroom', x: 0,                   y: SW_SPLIT_Y, w: SW_SPLIT_X,                      h: H - SW_SPLIT_Y },
-            { id: 'sw_bedroom',  x: SW_SPLIT_X,          y: SW_SPLIT_Y, w: CORR_X1 - SW_SPLIT_X,            h: H - SW_SPLIT_Y },
-            { id: 'se_living',   x: CORR_X2,             y: CORR_Y2,    w: W - CORR_X2,                     h: SE_SPLIT_Y - CORR_Y2 },
-            { id: 'se_bedroom',  x: CORR_X2,             y: SE_SPLIT_Y, w: SE_SPLIT_X - CORR_X2,            h: H - SE_SPLIT_Y },
-            { id: 'se_bathroom', x: SE_SPLIT_X,          y: SE_SPLIT_Y, w: W - SE_SPLIT_X,                  h: H - SE_SPLIT_Y },
+            { id: 'nw_kitchen', x: 0, y: 0, w: NW_SPLIT_X, h: NW_SPLIT_Y },
+            { id: 'nw_newroom', x: 0, y: NW_SPLIT_Y, w: NW_NARROW_ROOM_W_DEF, h: CORR_Y1 - NW_SPLIT_Y },
+            { id: 'nw_bedroom', x: NW_SPLIT_X, y: 0, w: CORR_X1 - NW_SPLIT_X, h: NW_SPLIT_Y },
+            { id: 'nw_living', x: NW_NARROW_ROOM_W_DEF, y: NW_SPLIT_Y, w: CORR_X1 - NW_NARROW_ROOM_W_DEF, h: CORR_Y1 - NW_SPLIT_Y },
+            { id: 'ne_bedroom', x: CORR_X2, y: 0, w: NE_SPLIT_X - CORR_X2, h: NE_SPLIT_Y },
+            { id: 'ne_bathroom', x: NE_SPLIT_X, y: 0, w: W - NE_SPLIT_X, h: NE_SPLIT_Y },
+            { id: 'ne_living', x: CORR_X2, y: NE_SPLIT_Y, w: W - CORR_X2, h: CORR_Y1 - NE_SPLIT_Y },
+            { id: 'sw_living', x: 0, y: CORR_Y2, w: CORR_X1, h: SW_SPLIT_Y - CORR_Y2 },
+            { id: 'sw_bathroom', x: 0, y: SW_SPLIT_Y, w: SW_SPLIT_X, h: H - SW_SPLIT_Y },
+            { id: 'sw_bedroom', x: SW_SPLIT_X, y: SW_SPLIT_Y, w: CORR_X1 - SW_SPLIT_X, h: H - SW_SPLIT_Y },
+            { id: 'se_living', x: CORR_X2, y: CORR_Y2, w: W - CORR_X2, h: SE_SPLIT_Y - CORR_Y2 },
+            { id: 'se_bedroom', x: CORR_X2, y: SE_SPLIT_Y, w: SE_SPLIT_X - CORR_X2, h: H - SE_SPLIT_Y },
+            { id: 'se_bathroom', x: SE_SPLIT_X, y: SE_SPLIT_Y, w: W - SE_SPLIT_X, h: H - SE_SPLIT_Y },
         ];
 
         function getPlayerRoom() { const px = player.x + player.width / 2, py = player.y + player.height / 2; for (const room of ROOMS) { if (px >= room.x && px < room.x + room.w && py >= room.y && py < room.y + room.h) return room; } return null; }
@@ -916,7 +966,7 @@
             }
         }
 
-        
+
         function resolveAABB(wall) { const px = player.x, py = player.y, pw = player.width, ph = player.height; const { x: wx, y: wy, w: ww, h: wh } = wall; if (!rectOverlap(px, py, pw, ph, wx, wy, ww, wh)) return; const oL = (px + pw) - wx, oR = (wx + ww) - px, oT = (py + ph) - wy, oB = (wy + wh) - py; const mX = Math.min(oL, oR), mY = Math.min(oT, oB); if (mX < mY) { player.x += (oL < oR) ? -oL : oR; } else { player.y += (oT < oB) ? -oT : oB; } }
         function getTexturedObjectWalls() { return texturedObjects.filter(o => o.solid && !o.collected).map(o => ({ x: o.x, y: o.y, w: o.width, h: o.height })); }
 
@@ -988,7 +1038,7 @@
         function updateCamera() { const lerp = 0.2 * deltaTime; camera.x += (player.x + player.width / 2 - camera.x) * lerp; camera.y += (player.y + player.height / 2 - camera.y) * lerp; const INV_OFFSET = 76; const halfW = (canvas.width / 2) / camera.zoom, halfH = (canvas.height / 2 - INV_OFFSET / 2) / camera.zoom; camera.x = Math.max(halfW, Math.min(W - halfW, camera.x)); camera.y = Math.max(halfH, Math.min(H - halfH, camera.y)); }
         function updateDoorAnims() { for (let d of APT_DOORS) { if (d.isOpen && d.openAnim < 1) d.openAnim = Math.min(1, d.openAnim + 0.06 * deltaTime); if (!d.isOpen && d.openAnim > 0) d.openAnim = Math.max(0, d.openAnim - 0.06 * deltaTime); } }
 
-        
+
         function drawCheckerboard(x, y, w, h, colA, colB, tileSize) {
             const sx = Math.floor(x / tileSize) * tileSize, sy = Math.floor(y / tileSize) * tileSize;
             for (let tx = sx; tx < x + w; tx += tileSize) {
@@ -1077,7 +1127,7 @@
             ctx.fillRect(0, 0, W12, H); ctx.fillRect(W - W12, 0, W12, H);
 
             const wallColor = '#1a1a1a';
-            const wallGlow  = 'rgba(200,200,200,0.4)';
+            const wallGlow = 'rgba(200,200,200,0.4)';
             const WT = 10;
             ctx.fillStyle = wallColor;
             ctx.fillRect(NW_SPLIT_X, 0, WT, NW_SPLIT_Y);
@@ -1085,10 +1135,10 @@
             ctx.fillRect(SW_SPLIT_X, SW_SPLIT_Y, WT, H - SW_SPLIT_Y);
             ctx.fillRect(SE_SPLIT_X, SE_SPLIT_Y, WT, H - SE_SPLIT_Y);
 
-            drawWallWithOpening2('horizontal', 0,       NW_SPLIT_Y, CORR_X1, NW_SPLIT_X / 2,                         NW_SPLIT_X + (CORR_X1 - NW_SPLIT_X) / 2,         180, wallColor, wallGlow);
-            drawWallWithOpening2('horizontal', CORR_X2, NE_SPLIT_Y, W,       CORR_X2 + (NE_SPLIT_X - CORR_X2) / 2,  NE_SPLIT_X + (W - NE_SPLIT_X) / 2,               180, wallColor, wallGlow);
-            drawWallWithOpening2('horizontal', 0,       SW_SPLIT_Y, CORR_X1, SW_SPLIT_X / 2,                         SW_SPLIT_X + (CORR_X1 - SW_SPLIT_X) / 2,         180, wallColor, wallGlow);
-            drawWallWithOpening2('horizontal', CORR_X2, SE_SPLIT_Y, W,       CORR_X2 + (SE_SPLIT_X - CORR_X2) / 2,  SE_SPLIT_X + (W - SE_SPLIT_X) / 2,               180, wallColor, wallGlow);
+            drawWallWithOpening2('horizontal', 0, NW_SPLIT_Y, CORR_X1, NW_SPLIT_X / 2, NW_SPLIT_X + (CORR_X1 - NW_SPLIT_X) / 2, 180, wallColor, wallGlow);
+            drawWallWithOpening2('horizontal', CORR_X2, NE_SPLIT_Y, W, CORR_X2 + (NE_SPLIT_X - CORR_X2) / 2, NE_SPLIT_X + (W - NE_SPLIT_X) / 2, 180, wallColor, wallGlow);
+            drawWallWithOpening2('horizontal', 0, SW_SPLIT_Y, CORR_X1, SW_SPLIT_X / 2, SW_SPLIT_X + (CORR_X1 - SW_SPLIT_X) / 2, 180, wallColor, wallGlow);
+            drawWallWithOpening2('horizontal', CORR_X2, SE_SPLIT_Y, W, CORR_X2 + (SE_SPLIT_X - CORR_X2) / 2, SE_SPLIT_X + (W - SE_SPLIT_X) / 2, 180, wallColor, wallGlow);
 
             ctx.fillStyle = wallColor; ctx.fillRect(0, CORR_Y1 - W12, CORR_X1, W12);
             ctx.fillStyle = wallColor; ctx.fillRect(CORR_X2, CORR_Y1 - W12, W - CORR_X2, W12);
@@ -1162,7 +1212,7 @@
             if (Math.abs(dx) < 70 && Math.abs(dy) < 70) { ctx.strokeStyle = 'rgba(255,215,0,0.7)'; ctx.lineWidth = 2; ctx.setLineDash([]); ctx.strokeRect(item.x - 2, bobY - 2, item.width + 4, item.height + 4); }
         }
 
-       
+
         function drawTexturedObjects() {
             const t = Date.now() / 600;
             for (let obj of texturedObjects) {
@@ -1222,11 +1272,11 @@
             const innerRadius = Math.max(60, Math.min(canvas.width, canvas.height) * 0.10);
             const outerRadius = Math.max(canvas.width, canvas.height) * 0.50;
             const grad = ctx.createRadialGradient(screenX, screenY, innerRadius, screenX, screenY, outerRadius);
-            grad.addColorStop(0,    'rgba(0, 0, 0, 0)');
+            grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
             grad.addColorStop(0.18, 'rgba(0, 0, 0, 0.18)');
             grad.addColorStop(0.45, 'rgba(0, 0, 0, 0.48)');
             grad.addColorStop(0.72, 'rgba(0, 0, 0, 0.78)');
-            grad.addColorStop(1,    'rgba(0, 0, 0, 0.96)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0.96)');
             ctx.save(); ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.restore();
         }
 
@@ -1315,11 +1365,11 @@
         function gameLoop(currentTime) {
             if (timerActive) {
                 timerElapsedTime = currentTime - timerStartTime;
-                const totalSeconds  = timerElapsedTime / 1000;
-                const minutes       = Math.floor(totalSeconds / 60);
-                const seconds       = Math.floor(totalSeconds % 60);
-                const centiseconds  = Math.floor((timerElapsedTime % 1000) / 10);
-                timerEl.textContent = `Time: ${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${String(centiseconds).padStart(2,'0')}`;
+                const totalSeconds = timerElapsedTime / 1000;
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = Math.floor(totalSeconds % 60);
+                const centiseconds = Math.floor((timerElapsedTime % 1000) / 10);
+                timerEl.textContent = `Time: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
                 timerEl.style.borderColor = '#ff3333';
             } else if (timerElapsedTime > 0) {
                 timerEl.style.borderColor = '#555555';
@@ -1337,17 +1387,17 @@
             updateDoorAnims();
             updateDoorLogic();
 
-            const nearExit    = getNearExitDoor();
+            const nearExit = getNearExitDoor();
             const nearAptDoor = getNearAptDoor();
             const nearDropped = getNearbyDroppedItem();
-            const nearTex     = getNearTexturedObject();
+            const nearTex = getNearTexturedObject();
 
             if (!dialogueOpen) {
-                if (nearExit)      { pickupPromptEl.textContent = `🚪 Press E to exit ${nearExit.id.toUpperCase()}`; pickupPromptEl.classList.add('visible'); }
+                if (nearExit) { pickupPromptEl.textContent = `🚪 Press E to exit ${nearExit.id.toUpperCase()}`; pickupPromptEl.classList.add('visible'); }
                 else if (nearAptDoor) { pickupPromptEl.textContent = nearAptDoor.restricted ? 'Restricted Area!' : (nearAptDoor.isOpen ? `🚪 Press E to close door` : `🚪 Press E to open door`); pickupPromptEl.classList.add('visible'); }
                 else if (nearDropped) { pickupPromptEl.textContent = `Press E to pick up ${nearDropped.label}`; pickupPromptEl.classList.add('visible'); }
                 else if (nearTex) {
-                    if (nearTex.isNote)       pickupPromptEl.textContent = `Press E to read ${nearTex.label}`;
+                    if (nearTex.isNote) pickupPromptEl.textContent = `Press E to read ${nearTex.label}`;
                     else if (nearTex.isLockbox) pickupPromptEl.textContent = `Press E to open ${nearTex.label}`;
                     else if (nearTex.IsPuzzleItem) pickupPromptEl.textContent = `Press E to pick up ${nearTex.label}`;
                     else pickupPromptEl.textContent = `Press E to inspect ${nearTex.label}`;
@@ -1355,7 +1405,7 @@
                 } else { pickupPromptEl.classList.remove('visible'); }
             } else { pickupPromptEl.classList.remove('visible'); }
 
-            const tx = canvas.width  / 2 - camera.x * camera.zoom;
+            const tx = canvas.width / 2 - camera.x * camera.zoom;
             const ty = canvas.height / 2 - camera.y * camera.zoom;
             ctx.save();
             ctx.setTransform(camera.zoom, 0, 0, camera.zoom, tx, ty);
