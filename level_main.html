@@ -546,7 +546,7 @@
     </div>
 
     <div id="lockbox-modal">
-        <div class="box-icon" id="lb-icon">📦</div>
+        <div class="box-icon" id="lb-icon"></div>
         <h2>Number Lock</h2>
         <div class="digits">
             <div class="digit-slot">
@@ -641,7 +641,6 @@
             if (lbDigits.join('') === LOCK_CODE) {
                 msg.textContent = '✓ Unlocked!';
                 msg.className = 'lb-msg success';
-                document.getElementById('lb-icon').textContent = '📭';
                 if (currentLockbox) {
                     currentLockbox.unlocked = true;
                     if (!currentLockbox.itemTaken) {
@@ -912,7 +911,7 @@
 
         const lockboxModal = document.getElementById('lockbox-modal');
         let lockboxOpen = false, currentLockbox = null;
-        function openLockbox(item) { currentLockbox = item; lbDigits.fill(0); lbNumEls.forEach(el => el.textContent = '0'); const msg = document.getElementById('lb-msg'); msg.textContent = ''; msg.className = 'lb-msg'; document.getElementById('lb-icon').textContent = item.unlocked ? '📭' : '📦'; lockboxModal.style.display = 'block'; requestAnimationFrame(() => lockboxModal.classList.add('open')); lockboxOpen = true; }
+        function openLockbox(item) { currentLockbox = item; lbDigits.fill(0); lbNumEls.forEach(el => el.textContent = '0'); const msg = document.getElementById('lb-msg'); msg.textContent = ''; msg.className = 'lb-msg'; lockboxModal.style.display = 'block'; requestAnimationFrame(() => lockboxModal.classList.add('open')); lockboxOpen = true; }
         function closeLockbox() { lockboxModal.classList.remove('open'); setTimeout(() => { lockboxModal.style.display = 'none'; }, 200); lockboxOpen = false; currentLockbox = null; }
 
         const fadeOverlay = document.getElementById('fade-overlay');
